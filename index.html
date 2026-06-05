@@ -1,631 +1,663 @@
 <!doctype html>
-<html lang="ar">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>لعبة الكرة المتحولة - التحديث الاحترافي</title>
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
-            transition: background 1.5s ease;
-        }
 
-        /* الحالة الطبيعية اللطيفة */
-        .normal-mode {
-            background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-        }
+<title>لعبة الكرة المتحولة - التحديث الاحترافي</title> <style> html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; transition: background 1.5s ease; }    /* الحالة الطبيعية اللطيفة */
+    .normal-mode {
+        background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+    }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
 
-        /* حالة الرعب (مرحلة 10+) */
-        .scary-mode {
-            background: #2b0000 !important;
-        }
+    /* حالة الرعب (مرحلة 10+) */
+    .scary-mode {
+        background: #2b0000 !important;
+    }
 
-        canvas {
-            display: block;
-            margin: auto;
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transition: filter 1.5s ease;
-        }
+    canvas {
+        display: block;
+        margin: auto;
+        border-radius: 12px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        transition: filter 1.5s ease;
+        touch-action: none; /* تمنع تهنيج الشاشة بالآيباد أثناء اللمس */
+    }
 
-        /* واجهة اللعبة العلوي */
-        .hud {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            padding: 12px 25px;
-            font-size: 18px;
-            color: #fff;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            z-index: 10;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+    /* واجهة اللعبة العلوي */
+    .hud {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 15px;
+        padding: 12px 25px;
+        font-size: 18px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 30px;
+        z-index: 10;
+        align-items: center;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
 
-        button {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 20px;
-            background: #28a745;
-            color: #fff;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
+    button {
+        padding: 8px 18px;
+        border: none;
+        border-radius: 20px;
+        background: #28a745;
+        color: #fff;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.2s;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
 
-        button:hover {
-            background: #218838;
-            transform: scale(1.05) translateY(-2px);
-        }
+    button:hover {
+        background: #218838;
+        transform: scale(1.05) translateY(-2px);
+    }
 
-        .btn-blue { background: #007bff; }
-        .btn-blue:hover { background: #0069d9; }
-        .btn-purple { background: #6f42c1; }
-        .btn-purple:hover { background: #5a32a3; }
+    .btn-blue { background: #007bff; }
+    .btn-blue:hover { background: #0069d9; }
+    .btn-purple { background: #6f42c1; }
+    .btn-purple:hover { background: #5a32a3; }
 
-        /* النوافذ المنبثقة */
-        .popup-screen {
-            display: none;
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: #fff;
-            animation: fadeIn 0.4s ease-out;
-        }
+    /* توقيع المطور الفخم للمحترفين */
+    .dev-credit {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 16px;
+        font-weight: bold;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(0, 0, 0, 0.4);
+        padding: 6px 16px;
+        border-radius: 20px;
+        backdrop-filter: blur(5px);
+        z-index: 5;
+        transition: all 1s ease;
+        pointer-events: none;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); }
-        }
+    /* تأثير الرمش لطور الرعب الخاص بالمطور */
+    @keyframes scaryBlink {
+        0% { opacity: 0.2; text-shadow: 0 0 5px #ff0000; }
+        50% { opacity: 1; text-shadow: 0 0 15px #ff0000, 0 0 25px #ff0000; }
+        100% { opacity: 0.2; text-shadow: 0 0 5px #ff0000; }
+    }
 
-        .popup-content {
-            background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(15,15,15,0.9));
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            border: 2px solid rgba(255,255,255,0.15);
-            min-width: 350px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-        }
+    /* النوافذ المنبثقة */
+    .popup-screen {
+        display: none;
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(8px);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        color: #fff;
+        animation: fadeIn 0.4s ease-out;
+    }
 
-        /* تنسيق الإعدادات المتطورة */
-        .setting-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 20px 0;
-            background: rgba(255,255,255,0.05);
-            padding: 10px 15px;
-            border-radius: 10px;
-        }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); }
+    }
 
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .popup-content {
+        background: linear-gradient(135deg, rgba(30,30,30,0.9), rgba(15,15,15,0.9));
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        border: 2px solid rgba(255,255,255,0.15);
+        min-width: 350px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
 
-        input[type="range"] {
-            cursor: pointer;
-            accent-color: #007bff;
-        }
+    /* تنسيق الإعدادات المتطورة */
+    .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px 0;
+        background: rgba(255,255,255,0.05);
+        padding: 10px 15px;
+        border-radius: 10px;
+    }
 
-        select {
-            padding: 5px 10px;
-            border-radius: 5px;
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            cursor: pointer;
-        }
+    .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
-        /* تنسيق المتجر */
-        .shop-items {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
+    input[type="range"] {
+        cursor: pointer;
+        accent-color: #007bff;
+    }
 
-        .shop-btn {
-            background: #252525;
-            padding: 15px;
-            font-size: 16px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .shop-btn.active {
-            border-color: #ffc107;
-            background: #353535;
-            box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
-        }
+    select {
+        padding: 5px 10px;
+        border-radius: 5px;
+        background: #333;
+        color: #fff;
+        border: 1px solid #555;
+        cursor: pointer;
+    }
 
-        /* شاشة الموت والرعب */
-        #endScreen {
-            background: rgba(15, 0, 0, 0.95);
-            color: #ff0000;
-        }
-        #endScreen h1 { font-size: 42px; margin-bottom: 5px; letter-spacing: 1px; }
-        .scaryText { font-size: 24px; color: #ff3333; margin: 15px 0; display: none; line-height: 1.6; }
+    /* تنسيق المتجر */
+    .shop-items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 20px;
+    }
 
-        .backgroundText {
-            position: absolute;
-            color: red;
-            font-size: 40px;
-            font-weight: bold;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 2s ease;
-            animation: floatText 5s infinite alternate;
-        }
+    .shop-btn {
+        background: #252525;
+        padding: 15px;
+        font-size: 16px;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    .shop-btn.active {
+        border-color: #ffc107;
+        background: #353535;
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.4);
+    }
 
-        @keyframes floatText {
-            0% { transform: translateY(0px) rotate(-5deg); }
-            100% { transform: translateY(-20px) rotate(5deg); }
-        }
-    </style>
-</head>
-<body dir="rtl" class="normal-mode">
+    /* شاشة الموت والرعب */
+    #endScreen {
+        background: rgba(15, 0, 0, 0.95);
+        color: #ff0000;
+    }
+    #endScreen h1 { font-size: 42px; margin-bottom: 5px; letter-spacing: 1px; }
+    .scaryText { font-size: 24px; color: #ff3333; margin: 15px 0; display: none; line-height: 1.6; }
 
-    <div class="hud">
-        <span>النقاط: <span id="score">0</span></span>
-        <span>أعلى نقاط: <span id="highScore">0</span></span>
-        <span>المرحلة: <span id="level">1</span></span>
-        <button id="pauseBtn">⏸️ إيقاف</button>
-        <button id="openShopBtn" class="btn-blue">🛒 المتجر</button>
-        <button id="openSettingsBtn" class="btn-purple">⚙️ الإعدادات</button>
-    </div>
+    .backgroundText {
+        position: absolute;
+        color: red;
+        font-size: 40px;
+        font-weight: bold;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 2s ease;
+        animation: floatText 5s infinite alternate;
+    }
 
-    <div class="backgroundText scary-element" style="top:25%; left:10%;">رح تموت وأنت حي!</div>
-    <div class="backgroundText scary-element" style="top:55%; left:65%;">لن تخرج من هنا…</div>
+    @keyframes floatText {
+        0% { transform: translateY(0px) rotate(-5deg); }
+        100% { transform: translateY(-20px) rotate(5deg); }
+    }
+</style>
 
-    <div id="settingsScreen" class="popup-screen">
-        <div class="popup-content">
-            <h2>⚙️ الإعدادات المتقدمة</h2>
-            
-            <div class="setting-row">
-                <label>🎚️ مستوى الصوت العام:</label>
-                <div class="volume-container">
-                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                    <span id="volumeValue" style="min-width: 40px; font-weight: bold;">50%</span>
-                </div>
-            </div>
 
-            <div class="setting-row">
-                <label>🏓 لون المضرب (قاعدة الصد):</label>
-                <select id="paddleColorSelect">
-                    <option value="#007bff">الأزرق الكلاسيكي</option>
-                    <option value="#28a745">الأخضر النيون</option>
-                    <option value="#6f42c1">البنفسجي الملكي</option>
-                    <option value="#ffc107">الذهبي الفخم</option>
-                </select>
-            </div>
+<div class="hud">
+    <span>النقاط: <span id="score">0</span></span>
+    <span>أعلى نقاط: <span id="highScore">0</span></span>
+    <span>المرحلة: <span id="level">1</span></span>
+    <button id="pauseBtn">⏸️ إيقاف</button>
+    <button id="openShopBtn" class="btn-blue">🛒 المتجر</button>
+    <button id="openSettingsBtn" class="btn-purple">⚙️ الإعدادات</button>
+</div>
 
-            <div class="setting-row">
-                <label>💨 مؤثرات الضباب والغيوم:</label>
-                <select id="fogToggleSelect">
-                    <option value="on">مفعّلة (جميلة)</option>
-                    <option value="off">معطّلة (أداء سريع)</option>
-                </select>
-            </div>
+<!-- توقيع المطور المباشر في الشاشة -->
+<div id="developerCredit" class="dev-credit">Developed by: @axssalah-arch</div>
 
-            <br>
-            <button id="closeSettingsBtn" style="background:#dc3545; width: 100%;">حفظ وإغلاق</button>
-        </div>
-    </div>
+<div class="backgroundText scary-element" style="top:25%; left:10%;">رح تموت وأنت حي!</div>
+<div class="backgroundText scary-element" style="top:55%; left:65%;">لن تخرج من هنا…</div>
 
-    <div id="shopScreen" class="popup-screen">
-        <div class="popup-content">
-            <h2>🛒 متجر الكرات الأسطوري</h2>
-            <p>اختر التصميم المفضل والمطور لكرتك:</p>
-            <div class="shop-items">
-                <button class="shop-btn active" data-ball="yellow">🟡 المظهر الكلاسيكي</button>
-                <button class="shop-btn" data-ball="football">⚽ كرة قدم مطورة</button>
-                <button class="shop-btn" data-ball="basketball">🏀 كرة سلة حقيقية</button>
-                <button class="shop-btn" data-ball="fire">🔥 كرة التنين المشتعلة</button>
-                <button class="shop-btn" data-ball="lightning">⚡ كرة البرق النيون</button>
-            </div>
-            <br>
-            <button id="closeShopBtn" style="background:#dc3545; margin-top:20px; width: 100%;">العودة للعب</button>
-        </div>
-    </div>
-
-    <div id="endScreen" class="popup-screen">
-        <div class="popup-content" style="border-color: #ff0000; background: #0a0000;">
-            <div style="font-size: 13px; color: #444; margin-bottom: 10px;">كود الخسارة المعتمد: 4699241</div>
-            <h1 id="deathTitle">انتهت اللعبة!</h1>
-            <div class="scaryText" id="scaryDeathText">لقد دخلت عالم الظلام… 😈<br>لن تخرج منه حيّاً… 💀</div>
-            <div style="font-size: 22px; margin: 12px 0; color:#fff;">النقاط المحققة: <span id="finalScore">0</span></div>
-            <div style="font-size: 22px; margin-bottom: 25px; color:#fff;">وصلت للمرحلة: <span id="finalLevel">1</span></div>
-            <button id="playAgainBtn" style="background:#ff0000; font-size:20px; padding:12px 35px; border-radius: 30px;">إعادة اللعب</button>
-        </div>
-    </div>
-
-    <canvas id="game" width="700" height="500"></canvas>
-
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
+<div id="settingsScreen" class="popup-screen">
+    <div class="popup-content">
+        <h2>⚙️ الإعدادات المتقدمة</h2>
         
-        // عناصر واجهة المستخدم
-        const scoreEl = document.getElementById('score');
-        const highScoreEl = document.getElementById('highScore');
-        const levelEl = document.getElementById('level');
-        const endScreen = document.getElementById('endScreen');
-        const shopScreen = document.getElementById('shopScreen');
-        const settingsScreen = document.getElementById('settingsScreen');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const volumeValue = document.getElementById('volumeValue');
-        const paddleColorSelect = document.getElementById('paddleColorSelect');
-        const fogToggleSelect = document.getElementById('fogToggleSelect');
-        
-        let W = canvas.width, H = canvas.height;
-        let score = 0, level = 1, running = true, paused = false;
-        let highScore = localStorage.getItem('ballGameHighScore') || 0;
-        highScoreEl.textContent = highScore;
+        <div class="setting-row">
+            <label>🎚️ مستوى الصوت العام:</label>
+            <div class="volume-container">
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumeValue" style="min-width: 40px; font-weight: bold;">50%</span>
+            </div>
+        </div>
 
-        let currentBallStyle = 'yellow';
-        let isFogEnabled = true;
+        <div class="setting-row">
+            <label>🏓 لون المضرب (قاعدة الصد):</label>
+            <select id="paddleColorSelect">
+                <option value="#007bff">الأزرق الكلاسيكي</option>
+                <option value="#28a745">الأخضر النيون</option>
+                <option value="#6f42c1">البنفسجي الملكي</option>
+                <option value="#ffc107">الذهبي الفخم</option>
+            </select>
+        </div>
 
-        // تعديل الحجم خفيف جداً بناءً على طلبك (العرض زاد من 100 إلى 115)
-        const ball = { x: W / 2, y: H / 2, r: 14, vx: 3.5, vy: 3.5 };
-        const paddle = { x: W / 2 - 57, y: H - 30, w: 115, h: 12, color: '#007bff' };
-        let keys = {};
+        <div class="setting-row">
+            <label>💨 مؤثرات الضباب والغيوم:</label>
+            <select id="fogToggleSelect">
+                <option value="on">مفعّلة (جميلة)</option>
+                <option value="off">معطّلة (أداء سريع)</option>
+            </select>
+        </div>
 
-        // === نظام الصوتيات المطور والقابل للتحكم الكامل ===
-        let globalVolume = 0.5; // القيمة الافتراضية 50%
+        <br>
+        <button id="closeSettingsBtn" style="background:#dc3545; width: 100%;">حفظ وإغلاق</button>
+    </div>
+</div>
 
-        const gentleMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
-        gentleMusic.loop = true;
+<div id="shopScreen" class="popup-screen">
+    <div class="popup-content">
+        <h2>🛒 متجر الكرات الأسطوري</h2>
+        <p>اختر التصميم المفضل والمطور لكرتك:</p>
+        <div class="shop-items">
+            <button class="shop-btn active" data-ball="yellow">🟡 المظهر الكلاسيكي</button>
+            <button class="shop-btn" data-ball="football">⚽ كرة قدم مطورة</button>
+            <button class="shop-btn" data-ball="basketball">🏀 كرة سلة حقيقية</button>
+            <button class="shop-btn" data-ball="fire">🔥 كرة التنين المشتعلة</button>
+            <button class="shop-btn" data-ball="lightning">⚡ كرة البرق النيون</button>
+        </div>
+        <br>
+        <button id="closeShopBtn" style="background:#dc3545; margin-top:20px; width: 100%;">العودة للعب</button>
+    </div>
+</div>
 
-        const scaryMusic = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg");
-        scaryMusic.loop = true;
+<div id="endScreen" class="popup-screen">
+    <div class="popup-content" style="border-color: #ff0000; background: #0a0000;">
+        <div style="font-size: 13px; color: #444; margin-bottom: 10px;">كود الخسارة المعتمد: 4699241</div>
+        <h1 id="deathTitle">انتهت اللعبة!</h1>
+        <div class="scaryText" id="scaryDeathText">لقد دخلت عالم الظلام… 😈<br>لن تخرج منه حيّاً… 💀</div>
+        <div style="font-size: 22px; margin: 12px 0; color:#fff;">النقاط المحققة: <span id="finalScore">0</span></div>
+        <div style="font-size: 22px; margin-bottom: 25px; color:#fff;">وصلت للمرحلة: <span id="finalLevel">1</span></div>
+        <button id="playAgainBtn" style="background:#ff0000; font-size:20px; padding:12px 35px; border-radius: 30px;">إعادة اللعب</button>
+    </div>
+</div>
 
-        const hitSound = new Audio("https://actions.google.com/sounds/v1/digital/beep.ogg");
-        const loseSound = new Audio("https://actions.google.com/sounds/v1/horror/creepy_slither.ogg");
+<canvas id="game" width="700" height="500"></canvas>
 
-        function updateAudioVolumes() {
-            gentleMusic.volume = globalVolume * 0.3;  // موازنة الموسيقى لتكون مريحة
-            scaryMusic.volume = globalVolume * 0.5;   
-            hitSound.volume = globalVolume * 0.4;
-            loseSound.volume = globalVolume * 0.7;
-        }
+<script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    
+    // عناصر واجهة المستخدم
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const levelEl = document.getElementById('level');
+    const endScreen = document.getElementById('endScreen');
+    const shopScreen = document.getElementById('shopScreen');
+    const settingsScreen = document.getElementById('settingsScreen');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeValue = document.getElementById('volumeValue');
+    const paddleColorSelect = document.getElementById('paddleColorSelect');
+    const fogToggleSelect = document.getElementById('fogToggleSelect');
+    const devCreditEl = document.getElementById('developerCredit');
+    
+    let W = canvas.width, H = canvas.height;
+    let score = 0, level = 1, running = true, paused = false;
+    let highScore = localStorage.getItem('ballGameHighScore') || 0;
+    highScoreEl.textContent = highScore;
 
-        // تتبع تغييرات شريط التحكم بالصوت الإعدادات
-        volumeSlider.addEventListener('input', (e) => {
-            let val = e.target.value;
-            volumeValue.textContent = val + "%";
-            globalVolume = val / 100;
-            updateAudioVolumes();
-        });
+    let currentBallStyle = 'yellow';
+    let isFogEnabled = true;
 
-        function manageMusic() {
-            if (!running || paused || globalVolume === 0) {
-                gentleMusic.pause();
-                scaryMusic.pause();
-                return;
-            }
-            if (level >= 10) {
-                gentleMusic.pause();
-                scaryMusic.play().catch(() => {});
-            } else {
-                scaryMusic.pause();
-                gentleMusic.play().catch(() => {});
-            }
-        }
+    // تعديل الحجم خفيف جداً (العرض زاد من 100 إلى 115)
+    const ball = { x: W / 2, y: H / 2, r: 14, vx: 3.5, vy: 3.5 };
+    const paddle = { x: W / 2 - 57, y: H - 30, w: 115, h: 12, color: '#007bff' };
+    let keys = {};
 
-        // بيئة الجزيئات (الضباب أو الغيوم)
-        let particles = [];
-        function createParticles() {
-            particles = [];
-            if (!isFogEnabled) return;
-            let count = level >= 10 ? 70 : 15;
-            for (let i = 0; i < count; i++) {
-                particles.push({
-                    x: Math.random() * W,
-                    y: Math.random() * H,
-                    radius: Math.random() * (level >= 10 ? 40 : 20) + 15,
-                    alpha: Math.random() * 0.1 + 0.03,
-                    speed: Math.random() * 0.4 + 0.1
-                });
-            }
-        }
+    // === نظام الصوتيات المطور والقابل للتحكم الكامل ===
+    let globalVolume = 0.5; // القيمة الافتراضية 50%
 
-        function drawParticles() {
-            if (!isFogEnabled) return;
-            for (let p of particles) {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = level >= 10 ? `rgba(220, 0, 0, ${p.alpha})` : `rgba(255, 255, 255, ${p.alpha})`;
-                ctx.fill();
-                ctx.closePath();
-                p.y -= p.speed;
-                if (p.y + p.radius < 0) {
-                    p.y = H + p.radius;
-                    p.x = Math.random() * W;
-                }
-            }
-        }
+    const gentleMusic = new Audio("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3");
+    gentleMusic.loop = true;
 
-        function reset() {
-            ball.x = W / 2; ball.y = H / 2;
-            ball.vx = 4; ball.vy = -4;
-            score = 0; level = 1;
-            scoreEl.textContent = score;
-            levelEl.textContent = level;
-            running = true; paused = false;
-            
-            document.body.className = "normal-mode";
-            canvas.style.filter = "none";
-            document.querySelectorAll('.scary-element').forEach(el => el.style.opacity = 0);
-            
-            endScreen.style.display = "none";
-            shopScreen.style.display = "none";
-            settingsScreen.style.display = "none";
-            
-            updateAudioVolumes();
-            createParticles();
-            manageMusic();
-        }
+    const scaryMusic = new Audio("https://actions.google.com/sounds/v1/ambiences/ambient_hum_air_conditioner.ogg");
+    scaryMusic.loop = true;
 
-        function endGame() {
-            running = false;
+    const hitSound = new Audio("https://actions.google.com/sounds/v1/digital/beep.ogg");
+    const loseSound = new Audio("https://actions.google.com/sounds/v1/horror/creepy_slither.ogg");
+
+    function updateAudioVolumes() {
+        gentleMusic.volume = globalVolume * 0.3;  // موازنة الموسيقى لتكون مريحة
+        scaryMusic.volume = globalVolume * 0.5;   
+        hitSound.volume = globalVolume * 0.4;
+        loseSound.volume = globalVolume * 0.7;
+    }
+
+    // تتبع تغييرات شريط التحكم بالصوت الإعدادات
+    volumeSlider.addEventListener('input', (e) => {
+        let val = e.target.value;
+        volumeValue.textContent = val + "%";
+        globalVolume = val / 100;
+        updateAudioVolumes();
+    });
+
+    function manageMusic() {
+        if (!running || paused || globalVolume === 0) {
             gentleMusic.pause();
             scaryMusic.pause();
-            if (globalVolume > 0) loseSound.play().catch(() => {});
-
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('ballGameHighScore', highScore);
-                highScoreEl.textContent = highScore;
-            }
-
-            if (level >= 10) {
-                document.getElementById('deathTitle').textContent = "لقد هُزمت في عالم الظلام!";
-                document.getElementById('scaryDeathText').style.display = "block";
-            } else {
-                document.getElementById('deathTitle').textContent = "حظاً أوفر! أعد المحاولة";
-                document.getElementById('scaryDeathText').style.display = "none";
-            }
-
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalLevel').textContent = level;
-            endScreen.style.display = "flex";
+            return;
         }
-
-        function checkLevel() {
-            let oldLevel = level;
-            level = Math.floor(score / 8) + 1;
-            levelEl.textContent = level;
-
-            if (level > oldLevel) {
-                ball.vx += 0.7 * Math.sign(ball.vx);
-                ball.vy += 0.7 * Math.sign(ball.vy);
-
-                if (level >= 10 && oldLevel < 10) {
-                    document.body.className = "scary-mode";
-                    canvas.style.filter = "sepia(50%) saturate(220%) hue-rotate(330deg) contrast(110%)";
-                    document.querySelectorAll('.scary-element').forEach(el => el.style.opacity = 0.25);
-                    createParticles();
-                    manageMusic();
-                }
-            }
+        if (level >= 10) {
+            gentleMusic.pause();
+            scaryMusic.play().catch(() => {});
+        } else {
+            scaryMusic.pause();
+            gentleMusic.play().catch(() => {});
         }
+    }
 
-        function update() {
-            ball.x += ball.vx;
-            ball.y += ball.vy;
-
-            if (ball.x < ball.r || ball.x > W - ball.r) ball.vx *= -1;
-            if (ball.y < ball.r) ball.vy *= -1;
-            if (ball.y > H) endGame();
-
-            if (ball.y + ball.r >= paddle.y && 
-                ball.x >= paddle.x && 
-                ball.x <= paddle.x + paddle.w) {
-                ball.vy *= -1;
-                ball.y = paddle.y - ball.r; 
-                score += 1;
-                scoreEl.textContent = score;
-                if (globalVolume > 0) { hitSound.currentTime = 0; hitSound.play().catch(() => {}); }
-                checkLevel();
-            }
-
-            if (keys['ArrowLeft'] || keys['a']) paddle.x -= 8.5;
-            if (keys['ArrowRight'] || keys['d']) paddle.x += 8.5;
-            paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+    // بيئة الجزيئات (الضباب أو الغيوم)
+    let particles = [];
+    function createParticles() {
+        particles = [];
+        if (!isFogEnabled) return;
+        let count = level >= 10 ? 70 : 15;
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                radius: Math.random() * (level >= 10 ? 40 : 20) + 15,
+                alpha: Math.random() * 0.1 + 0.03,
+                speed: Math.random() * 0.4 + 0.1
+            });
         }
+    }
 
-        // رسم الكرة بالأشكال الفخمة الجديدة والمحدثة بالكامل
-        function drawBall() {
-            ctx.save();
+    function drawParticles() {
+        if (!isFogEnabled) return;
+        for (let p of particles) {
             ctx.beginPath();
-            
-            if (level >= 10) {
-                // طور الرعب: شكل كابوسي مرعب للكرة
-                ctx.fillStyle = '#660000';
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = level >= 10 ? `rgba(220, 0, 0, ${p.alpha})` : `rgba(255, 255, 255, ${p.alpha})`;
+            ctx.fill();
+            ctx.closePath();
+            p.y -= p.speed;
+            if (p.y + p.radius < 0) {
+                p.y = H + p.radius;
+                p.x = Math.random() * W;
+            }
+        }
+    }
+
+    function reset() {
+        ball.x = W / 2; ball.y = H / 2;
+        ball.vx = 4; ball.vy = -4;
+        score = 0; level = 1;
+        scoreEl.textContent = score;
+        levelEl.textContent = level;
+        running = true; paused = false;
+        
+        document.body.className = "normal-mode";
+        canvas.style.filter = "none";
+        document.querySelectorAll('.scary-element').forEach(el => el.style.opacity = 0);
+        
+        // إعادة تعيين كابوس المطور للوضع الطبيعي
+        devCreditEl.style.animation = "none";
+        devCreditEl.style.color = "rgba(255, 255, 255, 0.6)";
+        devCreditEl.style.background = "rgba(0, 0, 0, 0.4)";
+        devCreditEl.textContent = "Developed by: @axssalah-arch";
+
+        endScreen.style.display = "none";
+        shopScreen.style.display = "none";
+        settingsScreen.style.display = "none";
+        
+        updateAudioVolumes();
+        createParticles();
+        manageMusic();
+    }
+
+    function endGame() {
+        running = false;
+        gentleMusic.pause();
+        scaryMusic.pause();
+        if (globalVolume > 0) loseSound.play().catch(() => {});
+
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('ballGameHighScore', highScore);
+            highScoreEl.textContent = highScore;
+        }
+
+        if (level >= 10) {
+            document.getElementById('deathTitle').textContent = "لقد هُزمت في عالم الظلام!";
+            document.getElementById('scaryDeathText').style.display = "block";
+        } else {
+            document.getElementById('deathTitle').textContent = "حظاً أوفر! أعد المحاولة";
+            document.getElementById('scaryDeathText').style.display = "none";
+        }
+
+        document.getElementById('finalScore').textContent = score;
+        document.getElementById('finalLevel').textContent = level;
+        endScreen.style.display = "flex";
+    }
+
+    function checkLevel() {
+        let oldLevel = level;
+        level = Math.floor(score / 8) + 1;
+        levelEl.textContent = level;
+
+        if (level > oldLevel) {
+            ball.vx += 0.7 * Math.sign(ball.vx);
+            ball.vy += 0.7 * Math.sign(ball.vy);
+
+            if (level >= 10 && oldLevel < 10) {
+                document.body.className = "scary-mode";
+                canvas.style.filter = "sepia(50%) saturate(220%) hue-rotate(330deg) contrast(110%)";
+                document.querySelectorAll('.scary-element').forEach(el => el.style.opacity = 0.25);
+                
+                // تفعيل كابوس المطور الاحترافي 😈
+                devCreditEl.textContent = "You are trapped in axssalah's nightmare... 😈";
+                devCreditEl.style.color = "#ff0000";
+                devCreditEl.style.background = "rgba(20, 0, 0, 0.8)";
+                devCreditEl.style.animation = "scaryBlink 2s infinite";
+
+                createParticles();
+                manageMusic();
+            }
+        }
+    }
+
+    function update() {
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        if (ball.x < ball.r || ball.x > W - ball.r) ball.vx *= -1;
+        if (ball.y < ball.r) ball.vy *= -1;
+        if (ball.y > H) endGame();
+
+        if (ball.y + ball.r >= paddle.y && 
+            ball.x >= paddle.x && 
+            ball.x <= paddle.x + paddle.w) {
+            ball.vy *= -1;
+            ball.y = paddle.y - ball.r; 
+            score += 1;
+            scoreEl.textContent = score;
+            if (globalVolume > 0) { hitSound.currentTime = 0; hitSound.play().catch(() => {}); }
+            checkLevel();
+        }
+
+        if (keys['ArrowLeft'] || keys['a']) paddle.x -= 8.5;
+        if (keys['ArrowRight'] || keys['d']) paddle.x += 8.5;
+        paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+    }
+
+    // رسم الكرة بالأشكال الفخمة الجديدة والمحدثة بالكامل
+    function drawBall() {
+        ctx.save();
+        ctx.beginPath();
+        
+        if (level >= 10) {
+            // طور الرعب: شكل كابوسي مرعب للكرة
+            ctx.fillStyle = '#660000';
+            ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // الطور الطبيعي: أشكال احترافية متقنة
+            if (currentBallStyle === 'yellow') {
+                let grad = ctx.createRadialGradient(ball.x-3, ball.y-3, 2, ball.x, ball.y, ball.r);
+                grad.addColorStop(0, '#fffb96');
+                grad.addColorStop(1, '#f1a80a');
+                ctx.fillStyle = grad;
                 ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = '#ff0000';
-                ctx.beginPath();
-                ctx.arc(ball.x, ball.y, 4, 0, Math.PI * 2);
+            } 
+            else if (currentBallStyle === 'football') {
+                ctx.fillStyle = '#ffffff';
+                ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
                 ctx.fill();
-            } else {
-                // الطور الطبيعي: أشكال احترافية متقنة
-                if (currentBallStyle === 'yellow') {
-                    // الكرة الكلاسيكية مع ظل عمق داخلي
-                    let grad = ctx.createRadialGradient(ball.x-3, ball.y-3, 2, ball.x, ball.y, ball.r);
-                    grad.addColorStop(0, '#fffb96');
-                    grad.addColorStop(1, '#f1a80a');
-                    ctx.fillStyle = grad;
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fill();
-                } 
-                else if (currentBallStyle === 'football') {
-                    // تصميم كرة قدم ذكي بلمسات هندسية داخل الكانفاس
-                    ctx.fillStyle = '#ffffff';
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#222222';
-                    ctx.lineWidth = 1.5;
-                    // رسم خطوط الكرة السداسية المبسطة
-                    ctx.beginPath();
-                    ctx.moveTo(ball.x, ball.y - ball.r); ctx.lineTo(ball.x, ball.y + ball.r);
-                    ctx.moveTo(ball.x - ball.r, ball.y); ctx.lineTo(ball.x + ball.r, ball.y);
-                    ctx.stroke();
-                    ctx.fillStyle = '#000000';
-                    ctx.beginPath(); ctx.arc(ball.x, ball.y, 4, 0, Math.PI * 2); ctx.fill();
-                } 
-                else if (currentBallStyle === 'basketball') {
-                    // تصميم كرة سلة واقعي
-                    ctx.fillStyle = '#e65c00';
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = '#331a00';
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.arc(ball.x - ball.r, ball.y, ball.r, -Math.PI/3, Math.PI/3);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.arc(ball.x + ball.r, ball.y, ball.r, Math.PI, 2*Math.PI);
-                    ctx.stroke();
-                } 
-                else if (currentBallStyle === 'fire') {
-                    // تأثير هالة توهج ناري مشتعل خلف الكرة
-                    let fireGrad = ctx.createRadialGradient(ball.x, ball.y, ball.r-5, ball.x, ball.y, ball.r + 8);
-                    fireGrad.addColorStop(0, 'rgba(255, 68, 0, 1)');
-                    fireGrad.addColorStop(0.5, 'rgba(255, 165, 0, 0.5)');
-                    fireGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
-                    ctx.fillStyle = fireGrad;
-                    ctx.arc(ball.x, ball.y, ball.r + 8, 0, Math.PI * 2);
-                    ctx.fill();
+                ctx.strokeStyle = '#222222';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(ball.x, ball.y - ball.r); ctx.lineTo(ball.x, ball.y + ball.r);
+                ctx.moveTo(ball.x - ball.r, ball.y); ctx.lineTo(ball.x + ball.r, ball.y);
+                ctx.stroke();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath(); ctx.arc(ball.x, ball.y, 4, 0, Math.PI * 2); ctx.fill();
+            } 
+            else if (currentBallStyle === 'basketball') {
+                ctx.fillStyle = '#e65c00';
+                ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#331a00';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(ball.x - ball.r, ball.y, ball.r, -Math.PI/3, Math.PI/3);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(ball.x + ball.r, ball.y, ball.r, Math.PI, 2*Math.PI);
+                ctx.stroke();
+            } 
+            else if (currentBallStyle === 'fire') {
+                let fireGrad = ctx.createRadialGradient(ball.x, ball.y, ball.r-5, ball.x, ball.y, ball.r + 8);
+                fireGrad.addColorStop(0, 'rgba(255, 68, 0, 1)');
+                fireGrad.addColorStop(0.5, 'rgba(255, 165, 0, 0.5)');
+                fireGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
+                ctx.fillStyle = fireGrad;
+                ctx.arc(ball.x, ball.y, ball.r + 8, 0, Math.PI * 2);
+                ctx.fill();
 
-                    // لب كرة ناري ممتد
-                    ctx.beginPath();
-                    let coreGrad = ctx.createRadialGradient(ball.x-2, ball.y-2, 1, ball.x, ball.y, ball.r);
-                    coreGrad.addColorStop(0, '#ffe600');
-                    coreGrad.addColorStop(1, '#ff3300');
-                    ctx.fillStyle = coreGrad;
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                else if (currentBallStyle === 'lightning') {
-                    // كرة الطاقة الكهربائية والبرق النيون
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#00ffff';
-                    let lightGrad = ctx.createRadialGradient(ball.x, ball.y, 2, ball.x, ball.y, ball.r);
-                    lightGrad.addColorStop(0, '#ffffff');
-                    lightGrad.addColorStop(0.4, '#00f0ff');
-                    lightGrad.addColorStop(1, '#0044ff');
-                    ctx.fillStyle = lightGrad;
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.beginPath();
+                let coreGrad = ctx.createRadialGradient(ball.x-2, ball.y-2, 1, ball.x, ball.y, ball.r);
+                coreGrad.addColorStop(0, '#ffe600');
+                coreGrad.addColorStop(1, '#ff3300');
+                ctx.fillStyle = coreGrad;
+                ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+                ctx.fill();
             }
-            ctx.restore();
-        }
-
-        function draw() {
-            // تلوين أرضية الكانفاس حسب الوضع الملعوب
-            ctx.fillStyle = level >= 10 ? '#150000' : '#0f172a';
-            ctx.fillRect(0, 0, W, H);
-            
-            drawParticles();
-            drawBall();
-
-            // رسم قاعدة الصد باللون المختار من الإعدادات
-            ctx.fillStyle = level >= 10 ? '#ff1111' : paddle.color;
-            ctx.shadowBlur = level >= 10 ? 10 : 0;
-            ctx.shadowColor = '#ff0000';
-            ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
-            ctx.shadowBlur = 0; // تنظيف الـ Shadow حتى لا يؤثر على العناصر الأخرى
-        }
-
-        function loop() {
-            if (running && !paused) {
-                update();
-                draw();
+            else if (currentBallStyle === 'lightning') {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00ffff';
+                let lightGrad = ctx.createRadialGradient(ball.x, ball.y, 2, ball.x, ball.y, ball.r);
+                lightGrad.addColorStop(0, '#ffffff');
+                lightGrad.addColorStop(0.4, '#00f0ff');
+                lightGrad.addColorStop(1, '#0044ff');
+                ctx.fillStyle = lightGrad;
+                ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+                ctx.fill();
             }
-            requestAnimationFrame(loop);
         }
+        ctx.restore();
+    }
 
-        // مستمعي الأحداث والأزرار والتحكم
-        window.addEventListener('keydown', e => { keys[e.key] = true; });
-        window.addEventListener('keyup', e => { delete keys[e.key]; });
+    function draw() {
+        ctx.fillStyle = level >= 10 ? '#150000' : '#0f172a';
+        ctx.fillRect(0, 0, W, H);
+        
+        drawParticles();
+        drawBall();
 
-        canvas.addEventListener('mousemove', e => {
-            if (paused || !running) return;
+        ctx.fillStyle = level >= 10 ? '#ff1111' : paddle.color;
+        ctx.shadowBlur = level >= 10 ? 10 : 0;
+        ctx.shadowColor = '#ff0000';
+        ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+        ctx.shadowBlur = 0; 
+    }
+
+    function loop() {
+        if (running && !paused) {
+            update();
+            draw();
+        }
+        requestAnimationFrame(loop);
+    }
+
+    // مستمعي الأحداث والأزرار والتحكم بالماوس واللمس
+    window.addEventListener('keydown', e => { keys[e.key] = true; });
+    window.addEventListener('keyup', e => { delete keys[e.key]; });
+
+    canvas.addEventListener('mousemove', e => {
+        if (paused || !running) return;
+        const rect = canvas.getBoundingClientRect();
+        paddle.x = e.clientX - rect.left - paddle.w / 2;
+        paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+    });
+
+    // نظام استشعار اللمس المتطور للآيباد والأجهزة اللوحية
+    function handleTouch(e) {
+        if (paused || !running) return;
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
             const rect = canvas.getBoundingClientRect();
-            paddle.x = e.clientX - rect.left - paddle.w / 2;
+            const scaleX = canvas.width / rect.width;
+            const touchX = touch.clientX - rect.left;
+            
+            paddle.x = (touchX * scaleX) - (paddle.w / 2);
             paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
-        });
-
-        document.getElementById('pauseBtn').addEventListener('click', () => {
-            paused = !paused;
-            document.getElementById('pauseBtn').textContent = paused ? "▶️ تشغيل" : "⏸️ إيقاف";
-            manageMusic();
-        });
-
-        // تشغيل النوافذ المنبثقة وحفظ الإعدادات
-        document.getElementById('openShopBtn').addEventListener('click', () => { paused = true; shopScreen.style.display = "flex"; manageMusic(); });
-        document.getElementById('closeShopBtn').addEventListener('click', () => { paused = false; shopScreen.style.display = "none"; manageMusic(); });
-        
-        document.getElementById('openSettingsBtn').addEventListener('click', () => { paused = true; settingsScreen.style.display = "flex"; manageMusic(); });
-        
-        // حفظ خيارات الإعدادات المحدثة عند الإغلاق
-        document.getElementById('closeSettingsBtn').addEventListener('click', () => { 
-            paused = false; 
-            settingsScreen.style.display = "none"; 
             
-            // تطبيق خيارات الألوان والضباب المحدثة فوراُ
-            paddle.color = paddleColorSelect.value;
-            isFogEnabled = fogToggleSelect.value === 'on';
-            
-            createParticles();
-            manageMusic(); 
-        });
+            e.preventDefault(); 
+        }
+    }
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+
+    document.getElementById('pauseBtn').addEventListener('click', () => {
+        paused = !paused;
+        document.getElementById('pauseBtn').textContent = paused ? "▶️ تشغيل" : "⏸️ إيقاف";
+        manageMusic();
+    });
+
+    document.getElementById('openShopBtn').addEventListener('click', () => { paused = true; shopScreen.style.display = "flex"; manageMusic(); });
+    document.getElementById('closeShopBtn').addEventListener('click', () => { paused = false; shopScreen.style.display = "none"; manageMusic(); });
+    document.getElementById('openSettingsBtn').addEventListener('click', () => { paused = true; settingsScreen.style.display = "flex"; manageMusic(); });
+    
+    document.getElementById('closeSettingsBtn').addEventListener('click', () => { 
+        paused = false; 
+        settingsScreen.style.display = "none"; 
         
-        document.getElementById('playAgainBtn').addEventListener('click', () => { reset(); });
+        paddle.color = paddleColorSelect.value;
+        isFogEnabled = fogToggleSelect.value === 'on';
+        
+        createParticles();
+        manageMusic(); 
+    });
+    
+    document.getElementById('playAgainBtn').addEventListener('click', () => { reset(); });
 
-        // تفعيل أزرار الشوب وتغيير الأشكال
-        document.querySelectorAll('.shop-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('active'));
-                let targetButton = e.target.closest('.shop-btn'); // لضمان التقاط الزر بشكل كامل
-                targetButton.classList.add('active');
-                currentBallStyle = targetButton.getAttribute('data-ball');
-            });
+    document.querySelectorAll('.shop-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.shop-btn').forEach(b => b.classList.remove('active'));
+            let targetButton = e.target.closest('.shop-btn'); 
+            targetButton.classList.add('active');
+            currentBallStyle = targetButton.getAttribute('data-ball');
         });
+    });
 
-        // تشغيل اللعبة
-        reset();
-        loop();
-    </script>
-</body>
-</html>
+    // تشغيل اللعبة
+    reset();
+    loop();
+</script>
