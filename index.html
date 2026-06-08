@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>Scary Ball Game - Legendary Replay Edition</title>
+    <title>Scary Ball Game - Godmode Restored</title>
     <style>
         html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; transition: background 1s ease; }  
         
@@ -67,10 +67,6 @@
         }
 
         .shop-section { text-align: right; margin: 20px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; color: #00ffcc; font-weight: bold; }
-        .color-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
-        .color-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
-        .color-row input[type="color"] { border: none; width: 45px; height: 30px; border-radius: 6px; cursor: pointer; background: none; }
-        
         .cosmetic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .cosmetic-btn {
             background: #111827; padding: 14px; border: 2px solid #1f2937; border-radius: 14px; color: white; cursor: pointer; text-align: right; transition: 0.2s; display: flex; flex-direction: column;
@@ -84,9 +80,12 @@
         }
         @keyframes matrixGlow { 0%, 100% { box-shadow: 0 0 5px #a855f7; } 50% { box-shadow: 0 0 20px #ec4899; } }
 
+        .color-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
+        .color-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
+        .color-row input[type="color"] { border: none; width: 45px; height: 30px; border-radius: 6px; cursor: pointer; background: none; }
+
         input[type="text"] { background: #111827; border: 1px solid #1f2937; color: #ffc107; padding: 6px; border-radius: 20px; text-align: center; }
 
-        /* شاشة إعادة العرض الفرعية داخل واجهة الموت */
         .replay-container {
             margin: 15px 0; background: #000; border: 2px dashed #ef4444; border-radius: 12px; overflow: hidden; position: relative;
         }
@@ -114,7 +113,7 @@
     <span class="points-badge">النقاط: <span id="pointsDisplay">0</span></span>
     
     <button id="pauseBtn">⏸️</button>
-    <button id="openShopBtn">🛒 مصفوفة التخصيص والألف شكل</button>
+    <button id="openShopBtn">🛒 متجر</button>
     <button id="openSettingsBtn" class="btn-purple">⚙️</button>
 </div>
 
@@ -129,7 +128,10 @@
                 <option value="on">عرض تجربة الكرة والسرعة الفيزياء</option>
             </select>
         </div>
-        <div class="color-row" style="border: 1px dashed #a855f7; background: rgba(168, 85, 247, 0.02);"><label>🔑 شفرة تخطي الأنظمة (Cheat):</label><input type="text" id="cheatCodeInput" placeholder="اكتب AXS2026 هنا..."></div>
+        <div class="color-row" style="border: 1px dashed #a855f7; background: rgba(168, 85, 247, 0.02);">
+            <label>🔑 شفرة تخطي الأنظمة (Cheat):</label>
+            <input type="text" id="cheatCodeInput" placeholder="اكتب الكود هنا (مثال: GODMODE أو RICH)...">
+        </div>
         <br>
         <button id="closeSettingsBtn" style="background:#a855f7; color:white; width: 100%; padding: 12px; font-size: 15px; border-radius: 14px;">تطبيق وحفظ التغييرات</button>
     </div>
@@ -137,18 +139,18 @@
 
 <div id="shopScreen" class="popup-screen">
     <div class="popup-content">
-        <h2 style="margin-top: 0; color: #00ffcc; text-shadow: 0 0 15px #00ffcc;">🎨 نظام التخصيص المطلق (4K Matrix Engine)</h2>
-        <p style="font-size: 13px; color: #9ca3af;">نقاطك الحالية المتاحة لتعديل المصفوفة البصرية: <span id="shopCurrentPoints" style="color:#ffc107; font-weight:bold;">0</span></p>
+        <h2 style="margin-top: 0; color: #00ffcc; text-shadow: 0 0 15px #00ffcc;">متجر</h2>
+        <p style="font-size: 13px; color: #9ca3af;">النقاط الحالية: <span id="shopCurrentPoints" style="color:#ffc107; font-weight:bold;">0</span></p>
         
-        <div class="shop-section">🌀 مصفوفة التهوّر: توليد مظهر عشوائي من أصل 1,000 شكل!</div>
+        <div class="shop-section">🌀 توليد مظهر عشوائي من أصل 1,000 شكل!</div>
         <div class="cosmetic-grid" style="margin-bottom: 15px;">
             <button class="cosmetic-btn matrix-btn locked" id="item-matrix-ai" data-cost="50">
-                <span style="align-self: center;">🎲 تفعيل الـ 1,000 مظهر العشوائي بالذكاء الاصطناعي</span>
-                <span class="desc" style="color: #fff; text-align: center;">(يتطلب 50 نقطة لدمج آلاف التشكيلات البصرية فوراً بضغطة واحدة)</span>
+                <span style="align-self: center;">🎲 تفعيل الـ 1,000 مظهر العشوائي</span>
+                <span class="desc" style="color: #fff; text-align: center;">(يتطلب 50 نقطة لدمج الأشكال عشوائياً بضغطة واحدة)</span>
             </button>
         </div>
 
-        <div class="shop-section">👑 إضافات وإكسسوارات الكرة العلوية (Accessories)</div>
+        <div class="shop-section">👑 إضافات وإكسسوارات الكرة العلوية</div>
         <div class="cosmetic-grid">
             <button class="cosmetic-btn active" data-type="accessory" data-id="none"><span>❌ بدون إضافات</span><span class="desc">الوضع السادة</span></button>
             <button class="cosmetic-btn locked" id="item-acc-crown" data-type="accessory" data-id="crown" data-cost="25"><span>👑 التاج الملكي الذهبي</span><span class="desc">يتطلب 25 نقطة لارتدائه فوق الكرة</span></button>
@@ -157,10 +159,10 @@
         <div class="shop-section">⚡ أنماط الـ Trail والذيل النيون المتوهج</div>
         <div class="cosmetic-grid">
             <button class="cosmetic-btn active" data-type="trail" data-id="standard"><span>🔵 ذيل كلاسيكي نيون</span><span class="desc">متاح مجاناً</span></button>
-            <button class="cosmetic-btn locked" id="item-trail-fire" data-type="trail" data-id="firetrail" data-cost="40"><span>🔥 ذيل اللهب الكوني الممتد</span><span class="desc">يطلب 40 نقطة</span></button>
+            <button class="cosmetic-btn locked" id="item-trail-fire" data-type="trail" data-id="firetrail" data-cost="40"><span>🔥 ذيل اللهب الكوني الممتد</span><span class="desc">يتطلب 40 نقطة</span></button>
         </div>
 
-        <div class="shop-section">🌌 خانة التلوين المفتوح الكامل (Quantum Color Picker)</div>
+        <div class="shop-section">🌌 خانة التلوين المفتوح الكامل</div>
         <div class="color-picker-grid">
             <div class="color-row"><label>🎨 لون الكرة الأساسي:</label><input type="color" id="ballColorPicker" value="#00ffcc"></div>
             <div class="color-row"><label>🏓 لون كشاف النيون للمضرب:</label><input type="color" id="paddleColorPicker" value="#00ffcc"></div>
@@ -174,7 +176,6 @@
 <div id="endScreen" class="popup-screen">
     <div class="popup-content" style="border-color: #ef4444; background: #020617; min-width: 450px;">
         <h1 style="color: #ef4444; font-size: 32px; text-shadow: 0 0 20px #ef4444; margin-bottom: 5px;">💀 سقطت في غياهب الفضاء!</h1>
-        
         <div style="font-size: 18px; margin: 5px 0; color: #fff;">مجموع النقاط: <span id="finalScore" style="color:#ffc107; font-weight: bold;">0</span> | المستوى: <span id="finalLevel" style="color:#00ffcc; font-weight: bold;">1</span></div>
         
         <div class="replay-container">
@@ -200,7 +201,6 @@
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     
-    // عناصر لوحة الموت وعرض الإعادة السينمائية
     const replayCanvas = document.getElementById('replayCanvas');
     const replayCtx = replayCanvas.getContext('2d');
     const triggerReplayBtn = document.getElementById('triggerReplayBtn');
@@ -234,6 +234,11 @@
     let ballTrail = [];
     let freezeTimer = 0;
 
+    // ميزات الأكواد المستردة بالكامل
+    let ghostMode = false;
+    let rainbowMode = false;
+    let godMode = false; // متغير كود الخلود الأسطوري!
+
     let onlinePlayers = Math.floor(Math.random() * 200) + 1100;
     let activeAccessory = 'none'; 
     let activeTrailStyle = 'standard';
@@ -248,10 +253,8 @@
     const loseSound = new Audio("https://actions.google.com/sounds/v1/horror/creepy_slither.ogg");
 
     let shockwaves = []; 
-
-    // 🎥 مصفوفة الذاكرة المؤقتة لتسجيل إطارات اللعبة من أجل الإعادة الأسطورية
     let replayBuffer = [];
-    const MAX_REPLAY_FRAMES = 90; // تسجيل آخر ثانية ونصف تقريباً قبل الموت
+    const MAX_REPLAY_FRAMES = 90;
 
     function updateShopLocksUI() {
         document.querySelectorAll('.cosmetic-btn[data-cost]').forEach(btn => {
@@ -275,7 +278,7 @@
         score = 0; level = 1; comboCount = 0; comboMultiplier = 1;
         paddle.w = paddle.baseW; pointsDisplay.textContent = score; levelEl.textContent = level;
         comboDisplay.style.display = "none"; ballTrail = []; shockwaves = [];
-        replayBuffer = [];
+        replayBuffer = []; ghostMode = false; rainbowMode = false; godMode = false;
         freezeTimer = 0; canvas.classList.remove('shake-effect');
         
         gameMode = gameModeSelect.value;
@@ -291,36 +294,30 @@
 
     function updateLivesUI() { livesDisplay.textContent = "❤️ ".repeat(lives); }
     
-    // دالة لتشغيل شاشة الموت وبدء العرض التلقائي البطيء للاستعراض
     function endGame() {
         running = false; 
         if (globalVolume > 0) loseSound.play().catch(() => {});
         document.getElementById('finalScore').textContent = score; 
         document.getElementById('finalLevel').textContent = level;
         endScreen.style.display = "flex";
-        
-        // تشغيل نظام الإعادة فوراً عند فتح القائمة تلقائياً
         startInstantReplayPlayBack();
     }
 
-    // محرك تشغيل الإعادة التلقائي البطيء (Slow-Mo Engine)
     let replayIntervalToken = null;
     function startInstantReplayPlayBack() {
         if (replayIntervalToken) clearInterval(replayIntervalToken);
         if (replayBuffer.length === 0) return;
 
         let frameIndex = 0;
-        // تشغيل الإطارات بسرعة بطيئة سينمائية (تباعد 35 مللي ثانية بدل 16)
         replayIntervalToken = setInterval(() => {
             if (frameIndex >= replayBuffer.length) {
-                frameIndex = 0; // حلقة تكرارية مستمرة للقطة الموت
+                frameIndex = 0;
             }
             renderSingleReplayFrame(replayBuffer[frameIndex]);
             frameIndex++;
         }, 35);
     }
 
-    // رسم الإطار المخزن داخل نافذة العرض الصغيرة المصغرة لقطة بقطة
     function renderSingleReplayFrame(frame) {
         let scaleX = replayCanvas.width / W;
         let scaleY = replayCanvas.height / H;
@@ -328,11 +325,9 @@
         replayCtx.fillStyle = frame.bgColor;
         replayCtx.fillRect(0, 0, replayCanvas.width, replayCanvas.height);
 
-        // رسم المضرب المصغر
         replayCtx.fillStyle = frame.paddleColor;
         replayCtx.fillRect(frame.paddleX * scaleX, frame.paddleY * scaleY, frame.paddleW * scaleX, 10);
 
-        // رسم ذيل الكرة المصغر
         for (let t of frame.trail) {
             replayCtx.beginPath();
             replayCtx.arc(t.x * scaleX, t.y * scaleY, 4, 0, Math.PI * 2);
@@ -342,7 +337,6 @@
             replayCtx.globalAlpha = 1.0;
         }
 
-        // رسم الكرة المصغرة الميتة
         replayCtx.beginPath();
         replayCtx.arc(frame.ballX * scaleX, frame.ballY * scaleY, 7, 0, Math.PI * 2);
         replayCtx.fillStyle = frame.ballColor;
@@ -358,10 +352,36 @@
         levelEl.textContent = level;
     }
 
+    // نظام فحص الكود المحدّث بكود GODMODE المسترد
     function checkCheatCode(code) {
-        if (code.trim().toUpperCase() === "AXS2026") {
+        let cleanCode = code.trim().toUpperCase();
+        
+        if (cleanCode === "AXS2026") {
             score = 150; pointsDisplay.textContent = score; level = 15; checkLevel(); updateShopLocksUI();
-            alert("🔓 تم تفعيل الكود بنجاح!");
+            alert("🔓 [AXS2026] قفزت للمرحلة 15 بنجاح ومعك 150 نقطة!");
+        } 
+        else if (cleanCode === "GODMODE") {
+            godMode = true;
+            alert("🛡️ [GODMODE] تم تفعيل الخلود المطلق! جدار الحماية السفلي نشط الحين ولن تسقط الكرة أبداً!");
+        }
+        else if (cleanCode === "GHOST") {
+            ghostMode = true;
+            alert("👻 [GHOST] تم تفعيل طور الشبح!");
+        } 
+        else if (cleanCode === "RICH") {
+            score = 9999; pointsDisplay.textContent = score; updateShopLocksUI();
+            alert("💰 [RICH] تم شحن رصيدك بـ 9,999 نقطة!");
+        } 
+        else if (cleanCode === "BIGPADDLE") {
+            paddle.w = paddle.baseW * 2;
+            alert("🏓 [BIGPADDLE] تم تضخيم المضرب مرتين!");
+        } 
+        else if (cleanCode === "RAINBOW") {
+            rainbowMode = true;
+            alert("🌈 [RAINBOW] وضع الألوان الراقصة فعال!");
+        } 
+        else {
+            alert("❌ هذا الكود غير موجود!");
         }
         cheatCodeInput.value = "";
     }
@@ -380,10 +400,14 @@
             speedVal.textContent = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy).toFixed(2); 
         }
 
+        if (rainbowMode && Math.random() < 0.05) {
+            ballColorPicker.value = `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+            paddleColorPicker.value = `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+        }
+
         ballTrail.push({ x: ball.x, y: ball.y });
         if (ballTrail.length > (activeTrailStyle === 'firetrail' ? 30 : 10)) ballTrail.shift();
 
-        // 💾 تسجيل وتحضير بيانات الإطار الحالي وحقنها في مصفوفة الإعادة الأسطورية
         let currentFrameData = {
             ballX: ball.x, ballY: ball.y,
             paddleX: paddle.x, paddleY: paddle.y, paddleW: paddle.w,
@@ -404,6 +428,14 @@
 
         if (ball.x < ball.r || ball.x > W - ball.r) { ball.vx *= -1; triggerHitEffects(); }
         if (ball.y < ball.r) { ball.vy *= -1; triggerHitEffects(); }
+
+        // تفعيل جدار الحماية في الأسفل عند تشغيل GODMODE
+        if (godMode && ball.y >= H - 25) {
+            ball.vy = -Math.abs(ball.vy);
+            ball.y = H - 26;
+            triggerHitEffects();
+            if (globalVolume > 0) { hitSound.currentTime = 0; hitSound.play().catch(() => {}); }
+        }
 
         if (ball.y > H) {
             if (gameMode === 'survival' && lives > 1) {
@@ -466,7 +498,26 @@
             ctx.beginPath(); ctx.arc(wave.x, wave.y, wave.r, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
         }
 
+        // رسم جدار حماية نيون توضيحي بالأسفل فقط إذا كان GODMODE فعالاً لحماية الكورة
+        if (godMode) {
+            ctx.save();
+            ctx.strokeStyle = '#ff0055';
+            ctx.lineWidth = 4;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff0055';
+            ctx.beginPath();
+            ctx.moveTo(0, H - 10);
+            ctx.lineTo(W, H - 10);
+            ctx.stroke();
+            ctx.restore();
+        }
+
         ctx.save();
+        if (ghostMode) {
+            let visibility = Math.min(1, (ball.y / (H - 100)));
+            ctx.globalAlpha = visibility < 0.15 ? 0.15 : visibility;
+        }
+
         ctx.shadowBlur = 25; ctx.shadowColor = ballColorPicker.value;
         let ballGrad = ctx.createRadialGradient(ball.x - 3, ball.y - 3, 2, ball.x, ball.y, ball.r);
         ballGrad.addColorStop(0, '#ffffff'); ballGrad.addColorStop(1, ballColorPicker.value);
