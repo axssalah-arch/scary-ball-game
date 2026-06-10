@@ -2,832 +2,993 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>Scary Ball Game - Max Speed Cyber Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scary Ball Game - Legendary Hardcore Edition</title>
     <style>
-        html, body { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #020617; color: #fff; }  
+        /* ==========================================================================
+           1. إعدادات الشاشة الـ 4K والخلفية الديناميكية المتحركة
+           ========================================================================== */
+        * { box-sizing: border-box; }
+        html, body {
+            height: 100%; margin: 0; padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; background: #020205; color: #ffffff;
+            user-select: none; -webkit-user-select: none;
+        }  
         
-        .ultimate-bg {
-            background: radial-gradient(circle at center, #1e1b4b, #0f172a, #020617);
-            background-size: 200% 200%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+        .ultimate-4k-bg {
+            background: radial-gradient(circle at center, #0b0d19 0%, #04050b 60%, #000000 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; width: 100vw; position: relative;
+        }
+        .ultimate-4k-bg::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px; animation: gridMove 20s linear infinite; pointer-events: none; z-index: 1;
+        }
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
         }
 
-        .game-container { display: flex; gap: 20px; align-items: flex-start; }
+        .game-container { display: flex; gap: 24px; align-items: flex-start; justify-content: center; z-index: 5; }
+        .canvas-container { position: relative; }
 
-        .shake-effect {
-            animation: ultraShake 0.15s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes ultraShake {
-            10%, 90% { transform: translate3d(-4px, -3px, 0); }
-            20%, 80% { transform: translate3d(5px, 4px, 0); }
-            30%, 50%, 70% { transform: translate3d(-7px, -5px, 0); }
-            40%, 60% { transform: translate3d(7px, 5px, 0); }
+        .fps-counter {
+            position: absolute; top: 15px; right: 20px; background: rgba(2, 4, 9, 0.85);
+            padding: 4px 12px; border-radius: 10px; font-family: monospace; font-size: 12px;
+            color: #00ffcc; border: 1px solid rgba(0, 255, 204, 0.3); pointer-events: none; z-index: 6;
         }
 
         canvas {
-            display: block;
-            border-radius: 20px;
-            box-shadow: 0 0 50px rgba(0, 255, 204, 0.3);
-            transition: filter 1s ease;
-            touch-action: none;
-            border: 2px solid rgba(0, 255, 204, 0.2);
-            max-width: 100%;
+            display: block; border-radius: 24px; 
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.25);
+            touch-action: none; border: 2px solid rgba(0, 255, 204, 0.4);
+            background: rgba(3, 5, 12, 0.75); cursor: none;
         }
 
+        .pause-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 4, 9, 0.75); backdrop-filter: blur(8px);
+            border-radius: 24px; flex-direction: column; justify-content: center;
+            align-items: center; z-index: 20; border: 2px solid rgba(0, 255, 204, 0.4);
+        }
+        .pause-title { font-size: 28px; font-weight: 900; color: #00ffcc; text-shadow: 0 0 20px rgba(0, 255, 204, 0.6); margin-bottom: 10px; }
+
+        /* شاشة إعادة اللقطة السينمائية */
+        .replay-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 3, 3, 0.4); backdrop-filter: blur(2px);
+            border-radius: 24px; flex-direction: column; justify-content: space-between;
+            padding: 20px; border: 2px solid #ef4444; z-index: 30; pointer-events: none;
+            box-shadow: inset 0 0 40px rgba(239, 68, 68, 0.5);
+        }
+        .replay-tag {
+            align-self: flex-start; background: #ef4444; color: white; font-weight: 900;
+            padding: 6px 16px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 8px;
+            animation: blink 0.8s infinite alternate; box-shadow: 0 0 15px #ef4444;
+        }
+        @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .level-bar-container {
+            width: 100%; background: rgba(255,255,255,0.03); height: 10px;
+            border-radius: 5px; margin: 10px 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);
+        }
+        .level-bar-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #a855f7);
+            transition: width 0.3s ease;
+        }
+
+        /* ==========================================================================
+           2. شريط المؤشرات العلوي الـ 4K (HUD Interface)
+           ========================================================================== */
         .hud {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 15px; padding: 12px 25px; font-size: 14px; color: #fff;
-            background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(15px); border-radius: 30px;
-            z-index: 10; align-items: center; border: 1px solid rgba(0, 255, 204, 0.2);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8); width: max-content;
+            display: flex; gap: 8px; padding: 10px 20px; font-size: 12px; color: #ffffff;
+            background: rgba(2, 4, 9, 0.95); backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px); border-radius: 40px; z-index: 10;
+            align-items: center; border: 1px solid rgba(0, 255, 204, 0.4);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
         }
 
         .online-counter {
             display: flex; align-items: center; gap: 6px; background: rgba(40, 167, 69, 0.15);
-            border: 1px solid rgba(40, 167, 69, 0.4); padding: 4px 12px; border-radius: 20px; color: #28a745; font-weight: bold;
+            border: 1px solid rgba(40, 167, 69, 0.4); padding: 4px 10px; border-radius: 25px; color: #2eb846; font-weight: bold;
         }
-        .online-dot { width: 8px; height: 8px; background-color: #28a745; border-radius: 50%; animation: pulseDot 1.5s infinite; }
-        @keyframes pulseDot { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+        .online-dot { width: 8px; height: 8px; background-color: #28a745; border-radius: 50%; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
 
-        .points-badge { background: rgba(255, 193, 7, 0.15); border: 1px solid #ffc107; padding: 4px 14px; border-radius: 20px; color: #ffc107; font-weight: bold; text-shadow: 0 0 10px #ffc107; }
-        .combo-box { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; padding: 4px 12px; border-radius: 20px; color: #ef4444; font-weight: bold; display: none; }
+        .points-badge {
+            background: rgba(234, 179, 8, 0.15); border: 1px solid rgba(234, 179, 8, 0.5);
+            padding: 4px 12px; border-radius: 25px; color: #eab308; font-weight: 800;
+        }
+
+        .btn-control { background: #ef4444; color: white; padding: 6px 12px; border-radius: 25px; font-weight: bold; }
+        .btn-control.resume { background: #22c55e; }
 
         button, select {
-            padding: 6px 16px; border: none; border-radius: 20px; background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s;
+            padding: 6px 12px; border: none; border-radius: 25px; background: #00ffcc;
+            color: #020617; font-weight: 700; cursor: pointer; transition: all 0.2s ease-in-out;
         }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 15px #00ffcc; }
-        .btn-purple { background: #a855f7; color: white; }
-        .btn-orange { background: linear-gradient(45deg, #ff7b00, #ffae00); color: black; animation: orangeGlow 1.5s infinite; }
-        @keyframes orangeGlow { 0%, 100% { box-shadow: 0 0 5px #ff7b00; } 50% { box-shadow: 0 0 20px #ffae00; } }
+        button:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 204, 0.6); }
+        .btn-panel { background: #1f2937; color: #ffffff; border: 1px solid #374151; }
+        .btn-purple { background: #a855f7; color: #ffffff; }
+        .btn-yellow { background: #eab308; color: #020617; }
 
+        /* ==========================================================================
+           3. الشريط الجانبي الفخم للمجتمع والسيرفر
+           ========================================================================== */
         .sidebar {
-            width: 290px; height: 560px; background: rgba(9, 13, 22, 0.85); backdrop-filter: blur(10px);
-            border-radius: 20px; border: 1px solid rgba(0, 255, 204, 0.1); padding: 15px;
-            display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 310px; height: 550px; background: rgba(3, 5, 12, 0.85);
+            backdrop-filter: blur(20px); border-radius: 24px;
+            border: 1px solid rgba(0, 255, 204, 0.2); padding: 16px;
+            display: flex; flex-direction: column; gap: 14px;
         }
-        .panel-title { color: #00ffcc; font-size: 14px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .panel-title { color: #00ffcc; font-size: 13px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; }
         
-        .chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; padding-right: 5px; }
-        .chat-msg { background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 10px; border-left: 3px solid #a855f7; text-align: right; word-break: break-all; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .chat-user { font-weight: bold; color: #ffc107; }
+        .chat-box { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+        .chat-msg { background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 10px; text-align: right; line-height: 1.4; border-right: 3px solid transparent; }
+        .chat-user { font-weight: 700; color: #eab308; }
 
-        .chat-input-container { display: flex; gap: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; position: relative; }
-        .chat-input-container input { flex: 1; background: #111827; border: 1px solid #1f2937; color: #fff; padding: 6px 12px; border-radius: 15px; font-size: 11px; text-align: right; }
-        .chat-input-container button { padding: 4px 12px; font-size: 11px; border-radius: 15px; }
-
-        .mute-overlay {
-            position: absolute; top: 8px; left: 0; width: 100%; height: calc(100% - 8px);
-            background: rgba(239, 68, 68, 0.95); color: white; display: none; align-items: center;
-            justify-content: center; font-size: 11px; font-weight: bold; border-radius: 15px;
-            z-index: 20; text-shadow: 0 1px 3px rgba(0,0,0,0.5); animation: systemAlert 0.5s infinite alternate;
+        .chat-input-container { display: flex; gap: 6px; }
+        .chat-input-container input {
+            flex: 1; background: #090b11; border: 1px solid #1f2937; color: #ffffff;
+            padding: 6px 14px; border-radius: 18px; font-size: 12px; text-align: right; outline: none;
         }
-        @keyframes systemAlert { from { background: rgba(239, 68, 68, 0.95); } to { background: rgba(153, 27, 27, 0.95); } }
 
-        .leaderboard { display: flex; flex-direction: column; gap: 6px; font-size: 12px; height: 130px; overflow-y: auto; }
-        .user-row { display: flex; justify-content: space-between; padding: 5px 8px; background: rgba(255,255,255,0.02); border-radius: 6px; }
-        .user-row.active-user { border: 1px solid #00ffcc; background: rgba(0,255,204,0.05); font-weight: bold; }
+        .leaderboard { display: flex; flex-direction: column; gap: 5px; font-size: 11px; height: 130px; overflow-y: auto; }
+        .user-row { display: flex; justify-content: space-between; padding: 6px 10px; background: rgba(255,255,255,0.01); border-radius: 8px; }
+        .user-row.active-user { border: 1px solid rgba(0, 255, 204, 0.5); background: rgba(0, 255, 204, 0.08); font-weight: bold; }
 
-        .challenge-zone-grid { display: flex; flex-direction: column; gap: 15px; margin: 20px 0; text-align: right; }
-        .zone-card { background: #111827; border: 2px solid #1f2937; border-radius: 16px; padding: 15px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s; }
-        .zone-card.claimed { border-color: #28a745; background: rgba(40, 167, 69, 0.05); opacity: 0.8; }
-        .zone-info { display: flex; flex-direction: column; gap: 4px; }
-        .zone-title { font-size: 15px; font-weight: bold; color: #ffae00; }
-        .zone-desc { font-size: 11px; color: #9ca3af; }
-        .claim-btn { background: #374151; color: #9ca3af; font-size: 12px; padding: 8px 16px; border-radius: 12px; font-weight: bold; cursor: not-allowed; transition: 0.2s; }
-        .claim-btn.ready { background: #00ffcc; color: black; cursor: pointer; animation: activePulse 1s infinite alternate; }
-        @keyframes activePulse { from { box-shadow: 0 0 2px #00ffcc; } to { box-shadow: 0 0 12px #00ffcc; } }
-
+        /* ==========================================================================
+           4. الواجهات المنبثقة المستقلة والمنفصلة (Popups Screen)
+           ========================================================================== */
         .popup-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(2, 6, 23, 0.9); backdrop-filter: blur(12px); flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100; color: #fff;
+            background: rgba(1, 2, 5, 0.96); backdrop-filter: blur(20px);
+            flex-direction: column; justify-content: center; align-items: center; z-index: 100;
         }
         .popup-content {
-            background: #090d16; padding: 35px; border-radius: 24px; text-align: center;
-            border: 2px solid #00ffcc; min-width: 580px; max-height: 85vh; overflow-y: auto;
-            box-shadow: 0 0 40px rgba(0, 255, 204, 0.2);
+            background: #06070d; padding: 28px; border-radius: 24px; border: 2px solid #00ffcc;
+            width: 550px; max-width: 95%; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.3);
         }
+        .close-popup-btn { width: 100%; padding: 12px; border: none; border-radius: 14px; font-weight: bold; color: white; cursor: pointer; margin-top: 15px; }
 
-        .shop-section { text-align: right; margin: 20px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; color: #00ffcc; font-weight: bold; }
-        .cosmetic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .challenge-item {
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.07);
+            padding: 12px; border-radius: 12px; text-align: right; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .challenge-status { font-weight: bold; padding: 4px 10px; border-radius: 20px; font-size: 11px; }
+        .status-locked { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+        .status-done { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid #22c55e; }
+
+        .shop-section { text-align: right; margin: 12px 0 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 4px; color: #00ffcc; font-weight: 700; font-size: 13px; }
+        .cosmetic-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .cosmetic-btn {
-            background: #111827; padding: 14px; border: 2px solid #1f2937; border-radius: 14px; color: white; cursor: pointer; text-align: right; transition: 0.2s; display: flex; flex-direction: column;
+            background: #0f111a; padding: 12px; border: 2px solid #1f2937; border-radius: 12px; color: #ffffff;
+            cursor: pointer; text-align: right; display: flex; flex-direction: column;
         }
-        .cosmetic-btn.active { border-color: #00ffcc; background: #064e3b; box-shadow: 0 0 15px rgba(0,255,204,0.3); }
-        .cosmetic-btn .desc { font-size: 11px; color: #9ca3af; margin-top: 4px; }
-        .cosmetic-btn.locked { opacity: 0.4; cursor: not-allowed; background: #271c1c; border-color: #7f1d1d; }
+        .cosmetic-btn.active { border-color: #00ffcc; background: rgba(0, 255, 204, 0.06); }
+        .cosmetic-btn .desc { font-size: 10px; color: #8b949e; margin-top: 2px; }
+        .cosmetic-btn.locked { opacity: 0.3; cursor: not-allowed; background: #1a0f0f; border-color: #3f1a1a; }
 
-        .matrix-btn {
-            grid-column: span 2; background: linear-gradient(45deg, #a855f7, #ec4899); font-weight: bold; border: 2px solid transparent; animation: matrixGlow 2s infinite; color: white;
-        }
-        @keyframes matrixGlow { 0%, 100% { box-shadow: 0 0 5px #a855f7; } 50% { box-shadow: 0 0 20px #ec4899; } }
+        .color-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 10px; text-align: right; }
+        .color-row input[type="color"] { border: none; width: 45px; height: 28px; cursor: pointer; background: none; }
+        .color-row input[type="range"] { accent-color: #00ffcc; width: 120px; }
 
-        .color-picker-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
-        .color-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); }
-        .color-row input[type="color"] { border: none; width: 45px; height: 30px; border-radius: 6px; cursor: pointer; background: none; }
+        .rank-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; text-align: center; margin-bottom: 15px; }
+        .rank-badge-big { font-size: 26px; font-weight: 900; text-shadow: 0 0 20px rgba(255,255,255,0.2); margin: 8px 0; }
 
-        input[type="text"] { background: #111827; border: 1px solid #1f2937; color: #ffc107; padding: 6px; border-radius: 20px; text-align: center; }
-
-        .replay-container {
-            margin: 15px 0; background: #000; border: 2px dashed #ef4444; border-radius: 12px; overflow: hidden; position: relative;
-        }
-        .replay-badge {
-            position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; padding: 3px 10px; font-size: 11px; font-weight: bold; border-radius: 4px; animation: blink 1s infinite;
-        }
         #alertBanner {
-            position: absolute; top: 90px; font-weight: bold; background: linear-gradient(90deg, #ff0055, #a855f7);
-            color: white; padding: 8px 30px; border-radius: 10px; font-size: 16px; display: none;
-            box-shadow: 0 0 20px #ff0055; z-index: 50; animation: pulseGlow 1s infinite;
+            position: absolute; top: 85px; font-weight: 800; background: linear-gradient(90deg, #00ffcc 0%, #a855f7 100%);
+            color: #020617; padding: 10px 30px; border-radius: 14px; font-size: 14px; display: none; z-index: 50;
+            box-shadow: 0 0 25px rgba(0,255,204,0.4);
         }
     </style>
 </head>
-<body class="ultimate-bg">
+<body class="ultimate-4k-bg">
 
-<div id="alertBanner">🔥 تحدي تضخيم المضرب والكرات نشط!</div>
+<div id="alertBanner">🔥 إشعار محرك الـ 4K المباشر!</div>
 
 <div class="hud">
-    <div class="online-counter"><span class="online-dot"></span><span id="onlineCountText">2,450 لاعب نشط</span></div>
+    <div class="online-counter"><span class="online-dot"></span><span id="onlineCountText">2,450 لاعب</span></div>
     
-    <div id="comboDisplay" class="combo-box">X1 Combo</div>
+    <button id="pauseGameBtn" class="btn-control">⏸️ إيقاف</button>
+    <button id="resumeGameBtn" class="btn-control resume" style="display: none;">▶️ تشغيل</button>
+
+    <div id="comboDisplay" style="color: #ef4444; font-weight: bold; display: none;">X1 Combo 🔥</div>
+    <div id="activePowerUpDisplay" style="color: #00ffcc; font-weight: bold; font-size: 11px; display: none; background: rgba(0,255,204,0.15); padding: 2px 12px; border-radius: 12px;"></div>
+    
     <div>
-        <label>الطور: </label>
-        <select id="gameModeSelect">
-            <option value="classic">الكلاسيكي المطور</option>
-            <option value="survival">البقاء اللانهائي ❤️</option>
+        <select id="gameModeSelect" style="background: #090b11; color: white; border: 1px solid rgba(0,255,204,0.3);">
+            <option value="classic">الطور الكلاسيكي</option>
+            <option value="survival">طور القلوب ❤️</option>
         </select>
     </div>
-    <div id="livesDisplay" style="color: #ef4444; font-weight: bold; display: none;">❤️ ❤️ ❤️</div>
-    <span>المرحلة: <span id="level" style="color:#00ffcc; font-weight:bold;">1</span></span>
+    <div id="livesDisplay" style="color: #ef4444; font-weight: bold; display: none; letter-spacing: 2px;">❤️ ❤️ ❤️</div>
+    
     <span class="points-badge">النقاط: <span id="pointsDisplay">0</span></span>
     
-    <button id="pauseBtn">⏸️</button>
-    <button id="openChallengesBtn" class="btn-orange">🎯 مكان التحديات</button>
-    <button id="openShopBtn">🛒 متجر</button>
-    <button id="openSettingsBtn" class="btn-purple">⚙️</button>
-</div>
-
-<div id="challengesZoneScreen" class="popup-screen">
-    <div class="popup-content" style="border-color: #ff7b00; box-shadow: 0 0 40px rgba(255, 123, 0, 0.3);">
-        <h2 style="margin-top: 0; color: #ffae00; text-shadow: 0 0 15px #ffae00;">🎯 خزانة التحديات الأسطورية الكبرى</h2>
-        <p style="font-size: 13px; color: #9ca3af;">أكمل التحديات الصعبة واقنص الجوائز الضخمة لرفع ترتيبك المباشر!</p>
-        
-        <div class="challenge-zone-grid">
-            <div class="zone-card" id="card-time">
-                <button class="claim-btn" id="btn-claim-time">تحقق</button>
-                <div class="zone-info">
-                    <span class="zone-title">⏳ الصمود الزمني والولاء للمحرك</span>
-                    <span class="zone-desc" id="desc-time">المطلوب: العب لمدة 15 دقيقة كاملة داخل القيم. (التقدم: 00:00 / 15:00)</span>
-                </div>
-            </div>
-            <div class="zone-card" id="card-lvl50">
-                <button class="claim-btn" id="btn-claim-lvl50">تحقق</button>
-                <div class="zone-info">
-                    <span class="zone-title">👑 ممتلك القوة المطلقة (Level 50)</span>
-                    <span class="zone-desc" id="desc-lvl50">المطلوب: اختراق جدار السرعة والوصول للمرحلة 50. (المرحلة الحالية: 1)</span>
-                </div>
-            </div>
-            <div class="zone-card" id="card-survival3">
-                <button class="claim-btn" id="btn-claim-survival3">تحقق</button>
-                <div class="zone-info">
-                    <span class="zone-title">💀 تحدي البقاء المستحيل (3 كرات وبدون خدش)</span>
-                    <span class="zone-desc" id="desc-survival3">المطلوب: شغل طور البقاء، افتح 3 كرات (مرحلة 3+) وحافظ على الـ 3 قلوب كاملة!</span>
-                </div>
-            </div>
-        </div>
-
-        <button id="closeChallengesBtn" style="background:#dc3545; color:white; width: 100%; padding: 12px; font-size: 16px; border-radius: 14px;">إغلاق والعودة للساحة</button>
-    </div>
+    <button id="openSettingsBtn" class="btn-panel">⚙️ الإعدادات</button>
+    <button id="openChallengesBtn" class="btn-panel" style="background: #eab308; color: #000;">🎯 التحديات</button>
+    <button id="openRanksBtn" class="btn-purple">🏆 الرتب</button>
+    <button id="openCodesBtn" class="btn-yellow">🔑 الأكواد</button>
+    <button id="openShopBtn">🛒 المتجر</button>
 </div>
 
 <div id="settingsScreen" class="popup-screen">
-    <div class="popup-content" style="border-color: #a855f7; box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);">
-        <h2 style="color: #a855f7; margin-top: 0;">⚙️ إعدادات المحرك والفيزياء</h2>
-        <div class="color-row"><label>🎚️ حجم مضخم الصوت العام:</label><input type="range" id="volumeSlider" min="0" max="100" value="50" style="width:50%;"></div>
-        <div class="color-row">
-            <label>📊 لوحة كشف البيانات المباشرة:</label>
-            <select id="statsToggleSelect">
-                <option value="off">إيقاف العرض</option>
-                <option value="on">عرض تجربة الكرة والسرعة الفيزياء</option>
-            </select>
+    <div class="popup-content" style="border-color: #1f2937;">
+        <h2 style="color: #ffffff; margin-top: 0; text-align: right;">⚙️ واجهة إعدادات المحرك والتحكم</h2>
+        <hr style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="color-row">
+                <label>⚙️ تعديل حجم كورة اللعب الحالية:</label>
+                <input type="range" id="ballSizeSlider" min="7" max="22" value="11">
+            </div>
+            <div class="color-row">
+                <label>⚡ التحكم في سرعة محرك الكرة الأساسي:</label>
+                <input type="range" id="gameSpeedSlider" min="7" max="17" value="10">
+            </div>
         </div>
-        <div class="color-row" style="border: 1px dashed #a855f7; background: rgba(168, 85, 247, 0.02);"><label>🔑 شفرة تخطي الأنظمة (Cheat):</label><input type="text" id="cheatCodeInput" placeholder="اكتب الكود هنا..."></div>
-        <br>
-        <button id="closeSettingsBtn" style="background:#a855f7; color:white; width: 100%; padding: 12px; font-size: 15px; border-radius: 14px;">تطبيق وحفظ التغييرات</button>
+        <button id="closeSettingsBtn" class="close-popup-btn" style="background: #1f2937;">حفظ العودة للساحة</button>
+    </div>
+</div>
+
+<div id="challengesScreen" class="popup-screen">
+    <div class="popup-content" style="border-color: #eab308; width: 580px;">
+        <h2 style="color: #eab308; margin-top: 0; text-align: right;">🎯 نظام التحديات والجوائز الأسطورية المباشرة</h2>
+        <hr style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="challenge-item">
+                <span id="ch1Status" class="challenge-status status-locked">جاري الحساب..</span>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; color: #fff;">⏱️ تحدي الصمود الزمني العالي</div>
+                    <div style="font-size: 11px; color: #8b949e;">العب لـ 10 دقائق متواصلة بالسيرفر دون إغلاق اللعبة. الجائزة: <span style="color:#00ffcc;">+150 نقطة</span></div>
+                    <div id="timeChallengeTicker" style="font-size: 12px; color: #eab308; font-weight: bold; margin-top: 4px;">الوقت المسجل الحين: 00:00 / 10:00</div>
+                </div>
+            </div>
+
+            <div class="challenge-item">
+                <span id="ch2Status" class="challenge-status status-locked">0 / 1000</span>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; color: #fff;">💯 تحدي الألف النظيف بدون أي خسارة</div>
+                    <div style="font-size: 11px; color: #8b949e;">وصل سكورك لـ 1000 نقطة بدون سقوط الكورة ولا مرة في طور القلوب!</div>
+                </div>
+            </div>
+
+            <div class="challenge-item">
+                <span id="ch3Status" class="challenge-status status-locked">0 / 500</span>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; color: #fff;">❤️ تحدي البقاء الحديدي بكامل القلوب</div>
+                    <div style="font-size: 11px; color: #8b949e;">اجمع 500 نقطة كاملة في طور القلوب وأنت محافظ على قلوبك الثلاثة ❤️❤️❤️ بالتمام!</div>
+                </div>
+            </div>
+        </div>
+        <button id="closeChallengesBtn" class="close-popup-btn" style="background: #eab308; color: #000;">إغلاق والعودة للساحة</button>
+    </div>
+</div>
+
+<div id="ranksScreen" class="popup-screen">
+    <div class="popup-content" style="border-color: #a855f7;">
+        <h2 style="color: #a855f7; margin-top: 0; text-align: right;">🏆 واجهة نظام الرتب والمراحل العالمية</h2>
+        <hr style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+        <div class="rank-card">
+            <div style="font-size: 13px; color: #8b949e;">رتبتك العالمية الحالية بالسيرفر:</div>
+            <div id="rankBadgeBig" class="rank-badge-big" style="color: #8b949e;">مبتدئ 🌌</div>
+            <div style="font-size: 13px; color: #00ffcc; margin-top: 15px; font-weight: bold;">المرحلة الحالية: Level <span id="currentLevelText">1</span></div>
+            <div class="level-bar-container"><div id="levelBarFill" class="level-bar-fill"></div></div>
+        </div>
+        <button id="closeRanksBtn" class="close-popup-btn" style="background: #a855f7;">العودة لساحة اللعب</button>
+    </div>
+</div>
+
+<div id="codesScreen" class="popup-screen">
+    <div class="popup-content" style="border-color: #eab308;">
+        <h2 style="color: #eab308; margin-top: 0; text-align: right;">🔑 نظام تفعيل الأكواد السرية الحصرية</h2>
+        <hr style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
+        <div class="chat-input-container" style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 16px; border: 1px dashed #eab308;">
+            <button id="redeemCodeBtn" style="border-radius: 8px; padding: 8px 20px; background: #eab308; color: #020617; font-weight: bold;">تفعيل الكود السري</button>
+            <input type="text" id="promoCodeInput" placeholder="اكتب الكود السري هنا بحروف كبيرة..." style="border-radius: 8px; text-transform: uppercase;">
+        </div>
+        <button id="closeCodesBtn" class="close-popup-btn" style="background: #eab308; color: #020617;">حفظ والعودة للعب</button>
     </div>
 </div>
 
 <div id="shopScreen" class="popup-screen">
     <div class="popup-content">
-        <h2 style="margin-top: 0; color: #00ffcc; text-shadow: 0 0 15px #00ffcc;">متجر الأشكال المفتوح</h2>
-        <p style="font-size: 13px; color: #9ca3af;">النقاط الحالية: <span id="shopCurrentPoints" style="color:#ffc107; font-weight:bold;">0</span></p>
-        
-        <div class="shop-section">🌀 توليد مظهر عشوائي من أصل 1,000 شكل!</div>
-        <div class="cosmetic-grid" style="margin-bottom: 15px;">
-            <button class="cosmetic-btn matrix-btn locked" id="item-matrix-ai" data-cost="50">
-                <span style="align-self: center;">🎲 تفعيل الـ 1,000 مظهر العشوائي</span>
-                <span class="desc" style="color: #fff; text-align: center;">(يتطلب 50 نقطة لدمج الأشكال عشوائياً بضغطة واحدة)</span>
+        <h2 style="margin-top: 0; color: #00ffcc; font-size: 22px; text-align: right;">🛒 المتجر الملكي الحصري للسكنات والتطويرات</h2>
+        <p style="font-size: 12px; color: #8b949e; text-align: right;">النقاط المتوفرة للشراء: <span id="shopCurrentPoints" style="color:#ffc107; font-weight:bold;">0</span></p>
+        <hr style="border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px;">
+
+        <div class="shop-section">👑 إضافات ومظاهر المضرب الملكية الحصرية</div>
+        <div class="cosmetic-grid" style="margin-bottom: 10px;">
+            <button class="cosmetic-btn active" data-type="paddleSkin" data-id="classic_neon">
+                <span>🟢 مضرب النيون الكلاسيكي</span>
+                <span class="desc">المظهر الافتراضي المتوهج (مجاني)</span>
+            </button>
+            <button class="cosmetic-btn locked" id="item-pad-rgb" data-type="paddleSkin" data-id="rgb_laser" data-cost="20">
+                <span>🌈 مضرب الـ RGB المتوهج</span>
+                <span class="desc">يتغير لونه باستمرار بشكل مبهر! (20 نقطة)</span>
+            </button>
+            <button class="cosmetic-btn locked" id="item-pad-crown" data-type="paddleSkin" data-id="royal_crown" data-cost="35">
+                <span>👑 التاج الملكي الفخم</span>
+                <span class="desc">يظهر تاج ذهبي مشع فوق المضرب! (35 نقطة)</span>
             </button>
         </div>
 
-        <div class="shop-section">👑 إضافات وإكسسوارات الكرة العلوية</div>
-        <div class="cosmetic-grid">
-            <button class="cosmetic-btn active" data-type="accessory" data-id="none"><span>❌ بدون إضافات</span><span class="desc">الوضع السادة</span></button>
-            <button class="cosmetic-btn locked" id="item-acc-crown" data-type="accessory" data-id="crown" data-cost="25"><span>👑 التاج الملكي الذهبي</span><span class="desc">يتطلب 25 نقطة لارتدائه فوق الكرة</span></button>
+        <div class="shop-section">🎨 لوحة التلوين الحر المباشر بدقة 4K</div>
+        <div class="color-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div class="color-row"><label style="font-size:11px;">🎨 لون الكورة:</label><input type="color" id="ballColorPicker" value="#00ffcc"></div>
+            <div class="color-row"><label style="font-size:11px;">🏓 لون المضرب:</label><input type="color" id="paddleColorPicker" value="#00ffcc"></div>
         </div>
-
-        <div class="shop-section">⚡ أنماط الـ Trail والذيل النيون المتوهج</div>
-        <div class="cosmetic-grid">
-            <button class="cosmetic-btn active" data-type="trail" data-id="standard"><span>🔵 ذيل كلاسيكي نيون</span><span class="desc">متاح مجاناً</span></button>
-            <button class="cosmetic-btn locked" id="item-trail-fire" data-type="trail" data-id="firetrail" data-cost="40"><span>🔥 ذيل اللهب الكوني الممتد</span><span class="desc">يتطلب 40 نقطة</span></button>
-        </div>
-
-        <div class="shop-section">🌌 خانة التلوين المفتوح الكامل</div>
-        <div class="color-picker-grid">
-            <div class="color-row"><label>🎨 لون الكرة الأساسي:</label><input type="color" id="ballColorPicker" value="#00ffcc"></div>
-            <div class="color-row"><label>🏓 لون كشاف النيون للمضرب:</label><input type="color" id="paddleColorPicker" value="#00ffcc"></div>
-            <div class="color-row"><label>🌌 لون هالة وذيل الحركة:</label><input type="color" id="trailColorPicker" value="#00ffff"></div>
-            <div class="color-row"><label>📺 لون إضاءة فضاء الخلفية:</label><input type="color" id="bgColorPicker" value="#1e1b4b"></div>
-        </div>
-        <button id="closeShopBtn" style="background:#dc3545; color:white; width: 100%; padding: 12px; font-size: 16px; border-radius: 14px;">إغلاق والعودة للساحة</button>
+        <button id="closeShopBtn" class="close-popup-btn" style="background:#b91c1c;">إغلاق والعودة للعب</button>
     </div>
 </div>
 
 <div id="endScreen" class="popup-screen">
-    <div class="popup-content" style="border-color: #ef4444; background: #020617; min-width: 450px;">
-        <h1 style="color: #ef4444; font-size: 32px; text-shadow: 0 0 20px #ef4444; margin-bottom: 5px;">💀 سقطت في غياهب الفضاء!</h1>
-        <div style="font-size: 18px; margin: 5px 0; color: #fff;">مجموع النقاط: <span id="finalScore" style="color:#ffc107; font-weight: bold;">0</span> | المستوى: <span id="finalLevel" style="color:#00ffcc; font-weight: bold;">1</span></div>
-        
-        <div class="replay-container">
-            <span class="replay-badge">إعادة اللقطة الأسطورية 🎬 (SLOW-MO)</span>
-            <canvas id="replayCanvas" width="400" height="220" style="box-shadow: none; border: none; border-radius: 0; display: block;"></canvas>
-        </div>
-
-        <div style="display: flex; gap: 10px; width: 100%;">
-            <button id="triggerReplayBtn" style="background:#00ffcc; color:#000; font-size:14px; padding:10px; border-radius: 12px; flex: 1;">🎬 إعادة عرض اللقطة</button>
-            <button id="playAgainBtn" style="background:#ef4444; color:white; font-size:14px; padding:10px; border-radius: 12px; flex: 1;">🔄 إعادة محاكاة اللعب</button>
-        </div>
+    <div class="popup-content" style="border-color: #ef4444; background: #030712; max-width: 420px;">
+        <h1 style="color: #ef4444; font-size: 24px; margin-bottom: 5px; text-align: center;">💀 انتهت محاكاة الصد!</h1>
+        <div style="font-size: 16px; margin: 5px 0; text-align: center;">النقاط التي جمعتها: <span id="finalScore" style="color:#ffc107; font-weight:bold;">0</span></div>
+        <button id="playAgainBtn" style="background:#ef4444; color:white; font-size:13px; padding:10px 20px; border-radius: 12px; border:none; font-weight:bold; margin-top:10px; width:100%;">🔄 العودة والاكتساح من جديد (شحن كامل القلوب) ❤️</button>
     </div>
 </div>
 
-<div id="perfStats" style="position:absolute; bottom:15px; left:25px; color:#00ffcc; font-family:monospace; font-size:13px; display:none; z-index:10; background:rgba(2, 6, 23, 0.85); padding:10px 15px; border-radius:12px; border: 1px solid rgba(0, 255, 204, 0.2);">
-    🎮 تجربة الكرة الحالية: <span id="fpsVal" style="color: #fff; font-weight: bold; margin-right: 15px;">60</span> 
-    ⚡ سرعة الفيزياء للكرة 1: <span id="speedVal" style="color: #ffc107; font-weight: bold;">0.0</span> px/f
-</div>
+<div class="game-container" style="margin-top: 75px;">
+    <div class="canvas-container">
+        <div class="fps-counter">FPS: <span id="fpsText">60</span></div>
+        
+        <div id="pauseOverlay" class="pause-overlay">
+            <div class="pause-title">⏸️ اللعبة متوقفة مؤقتاً</div>
+        </div>
 
-<div class="game-container" style="margin-top: 50px;">
-    
-    <canvas id="game" width="750" height="560"></canvas>
+        <div id="replayOverlay" class="replay-overlay">
+            <div class="replay-tag">🔴 4K INSTANT REPLAY (إعادة لقطة الخسارة بالبطيء)</div>
+        </div>
+
+        <canvas id="game" width="800" height="550" tabindex="1"></canvas>
+    </div>
 
     <div class="sidebar">
         <div>
-            <div class="panel-title">🏆 متصدري السيرفر اللايف</div>
+            <div class="panel-title">🏆 متصدري سيرفر الصد الحية (4K Setup)</div>
             <div class="leaderboard" id="leaderboardBox"></div>
         </div>
-        
-        <div style="display: flex; flex-direction: column; flex: 1; min-height: 0;">
-            <div class="panel-title">💬 شات مجتمع السيرفر المباشر</div>
+        <div style="display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 5px;">
+            <div class="panel-title">💬 شات السيرفر الناري والمشتعل (📡 Live Discord Style)</div>
             <div class="chat-box" id="liveChatBox">
-                <div class="chat-msg" style="border-left: 3px solid #28a745;"><span class="chat-user" style="color:#28a745;">System:</span> تم تشغيل جدار حماية السيرفر الخارق ضد السب! 🛡️⛔</div>
+                <div class="chat-msg" style="border-right: 3px solid #00ffcc; color: #00ffcc; font-weight: bold;">النظام: تم ترقية نظام الذكاء لطور الهواش والطقطقة! البوتات مارح ترحمك الحين 🤫🔥</div>
             </div>
-            
             <div class="chat-input-container">
-                <div id="muteOverlay" class="mute-overlay">🚫 تم حظرك مؤقتاً بسبب السب! المتبقي: <span id="muteTimerVal">60</span> ثانية</div>
                 <button id="sendChatBtn">إرسال</button>
-                <input type="text" id="myChatInput" placeholder="اكتب رسالة للشات...">
+                <input type="text" id="myChatInput" placeholder="اكتب رسالة وفجر الشات...">
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    /* ==========================================================================
+       5. النواة الأساسية لربط عناصر شاشات العرض والمحرك الداخلي
+       ========================================================================== */
     const canvas = document.getElementById('game');
     const ctx = canvas.getContext('2d');
     
-    const replayCanvas = document.getElementById('replayCanvas');
-    const replayCtx = replayCanvas.getContext('2d');
-    const triggerReplayBtn = document.getElementById('triggerReplayBtn');
-
     const pointsDisplay = document.getElementById('pointsDisplay');
-    const levelEl = document.getElementById('level');
     const comboDisplay = document.getElementById('comboDisplay');
     const livesDisplay = document.getElementById('livesDisplay');
     const gameModeSelect = document.getElementById('gameModeSelect');
     const endScreen = document.getElementById('endScreen');
-    const shopScreen = document.getElementById('shopScreen');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    const replayOverlay = document.getElementById('replayOverlay');
+    
+    const pauseGameBtn = document.getElementById('pauseGameBtn');
+    const resumeGameBtn = document.getElementById('resumeGameBtn');
+
     const settingsScreen = document.getElementById('settingsScreen');
-    const challengesZoneScreen = document.getElementById('challengesZoneScreen');
-    const volumeSlider = document.getElementById('volumeSlider');
-    const statsToggleSelect = document.getElementById('statsToggleSelect');
-    const cheatCodeInput = document.getElementById('cheatCodeInput');
+    const challengesScreen = document.getElementById('challengesScreen');
+    const ranksScreen = document.getElementById('ranksScreen');
+    const codesScreen = document.getElementById('codesScreen');
+    const shopScreen = document.getElementById('shopScreen');
+    
     const shopCurrentPoints = document.getElementById('shopCurrentPoints');
-    const perfStats = document.getElementById('perfStats');
-    const fpsVal = document.getElementById('fpsVal');
-    const speedVal = document.getElementById('speedVal');
-    const onlineCountText = document.getElementById('onlineCountText');
     const alertBanner = document.getElementById('alertBanner');
     const liveChatBox = document.getElementById('liveChatBox');
     const myChatInput = document.getElementById('myChatInput');
     const sendChatBtn = document.getElementById('sendChatBtn');
     const leaderboardBox = document.getElementById('leaderboardBox');
-    const muteOverlay = document.getElementById('muteOverlay');
-    const muteTimerVal = document.getElementById('muteTimerVal');
+    const activePowerUpDisplay = document.getElementById('activePowerUpDisplay');
+
+    const currentLevelText = document.getElementById('currentLevelText');
+    const levelBarFill = document.getElementById('levelBarFill');
+    const rankBadgeBig = document.getElementById('rankBadgeBig');
+
+    const fpsText = document.getElementById('fpsText');
+    const promoCodeInput = document.getElementById('promoCodeInput');
+    const redeemCodeBtn = document.getElementById('redeemCodeBtn');
 
     const ballColorPicker = document.getElementById('ballColorPicker');
     const paddleColorPicker = document.getElementById('paddleColorPicker');
-    const trailColorPicker = document.getElementById('trailColorPicker');
-    const bgColorPicker = document.getElementById('bgColorPicker');
-    
+    const ballSizeSlider = document.getElementById('ballSizeSlider');
+    const gameSpeedSlider = document.getElementById('gameSpeedSlider');
+
+    // عناصر نظام التحديات الجديد
+    const timeChallengeTicker = document.getElementById('timeChallengeTicker');
+    const ch1Status = document.getElementById('ch1Status');
+    const ch2Status = document.getElementById('ch2Status');
+    const ch3Status = document.getElementById('ch3Status');
+    const onlineCountText = document.getElementById('onlineCountText');
+
     let W = canvas.width, H = canvas.height;
     let score = 0, level = 1, running = true, paused = false;
     let comboCount = 0, comboMultiplier = 1;
     let gameMode = 'classic', lives = 3;
-    let freezeTimer = 0;
 
-    let balls = [];
-    let obstacles = [];
+    let lastLoopTime = performance.now();
+    let frameCount = 0, fps = 60;
 
-    let ghostMode = false;
-    let rainbowMode = false;
-    let godMode = false;
+    let balls = []; let particles = []; let ballTrails = []; let powerUps = []; 
+    let activePowerUp = null, powerUpTimer = 0;
+    let activePaddleSkin = 'classic_neon'; let usedCodes = []; 
 
-    let gameSecondsElapsed = 0; 
-    let hasLostLifeInSurvival = false; 
-    let chTimeClaimed = false; let chLvl50Claimed = false; let chSurvival3Claimed = false;
-
-    let isMuted = false;
-    let muteSecondsLeft = 0;
-    let muteTimerInterval = null;
-
-    let onlinePlayers = Math.floor(Math.random() * 150) + 2400;
-    let activeAccessory = 'none'; 
-    let activeTrailStyle = 'standard';
-
-    let livePlayersData = [
-        { name: "Pro_Gamer", score: 850 },
-        { name: "Abu_Fahad", score: 620 },
-        { name: "xX_Storm_Xx", score: 430 },
-        { name: "NoobMaster77", score: 180 }
-    ];
-
-    const paddle = { x: W / 2 - 65, y: H - 35, w: 130, baseW: 130, h: 14 };
-    let keys = {};
-    let lastCalledTime, fps;
-
-    let globalVolume = 0.5;
-    const hitSound = new Audio("https://actions.google.com/sounds/v1/digital/beep.ogg");
-    const loseSound = new Audio("https://actions.google.com/sounds/v1/horror/creepy_slither.ogg");
-
-    let shockwaves = []; 
     let replayBuffer = [];
-    const MAX_REPLAY_FRAMES = 90;
+    let isReplaying = false;
+    let replayFrameIndex = 0;
 
-    const toxicWords = ["نوب", "غبي", "حمار", "هكر", "كلب", "ياورع", "ورع", "ياحمار", "يانوب"];
-    const botToxicReplies = [
-        "وربي أنت النوب الأكبر شوف سكورك كم ههههههه 🤣",
-        "يا ولد احترم نفسك ولا تسب ترا السستم بيقفل شاتك الحين!! 🤐",
-        "ابلع بلاغ الحين نطير حسابك يا بطل الشاشات 🚨",
-        "ههههههه زعل لأنه خسر الكرة وطاح، ركز باللعب بس!",
-        "كفووو السستم شغال، ابلع باند يا توكسيك خل الشات نظيف"
+    // متغيّرات التحديات واللاعبين النشطين
+    let currentOnlineCount = 2450; 
+    let gameplaySeconds = 0; 
+    let challenge1Completed = false;
+    let challenge2Completed = false;
+    let challenge3Completed = false;
+    let ballDroppedThisGame = false; // لمتابعة تحدي الـ 1000 نقطة بدون سقوط الكورة
+    let lostHeartsThisGame = false;  // لمتابعة تحدي الـ 500 نقطة بدون خسارة قلب
+
+    function getRankConfig(points) {
+        if (points <= 20) return { name: "مبتدئ 🌌", color: "#8b949e" };
+        if (points <= 100) return { name: "محترف ⚡", color: "#00ffcc" };
+        if (points <= 400) return { name: "صاد أسطوري ⚔️", color: "#ffae00" };
+        return { name: "ملك السيرفر 👑", color: "#ec4899" };
+    }
+
+    // بوتات اللعب الحية بأسماء تفاعلية
+    let livePlayersData = [
+        { name: "👑 Master_X", score: 620 }, { name: "⚡ Toxic_Boy", score: 480 },
+        { name: "🔥 Noob_Slayer", score: 310 }, { name: "🐧 Abu_Sora", score: 95 }
     ];
 
-    const chatUsers = ["Faisal_99", "King_Rider", "Legend_Slayer", "Sultan_Gamer", "Waleed_UX", "NoobMaster77", "Pro_Gamer"];
-    const chatPhrases = [
-        "شباب تحدي الـ 500 نقطة بدون موت حريقة، توني وصلت مرحلة 3 وقفت قلوبي هههه 😭",
-        "وربي اللعبة صايرة ادمان مع التحديثات الجديدة هذي ✨",
-        "توني جمعت نقاط واشتريت التاج الملكي من المتجر شكله طالع فخم ع الكورة 👑",
-        "أخيراً سيرفر محترم، الشات سريع والفيزياء حقتها توب",
-        "مين وصل لفل 50؟ السرعة هناك مجنونة لازم مضرب عملاق!",
-        "يا عيال سكوري وصل 400 الحين وتخطيت xX_Storm_Xx كفووو 🔥"
-    ];
+    // قاموس السوالف الحركية الأسطورية (طقطقة وهواش عنيف وتحدي حقيقي)
+    const botReplies = {
+        scoreProgress: [
+            "شوفوا Master_X جالس يكمبر بالسكور ههههههه 🤣", "وربي السيرفر صار زحمة وش ذا اللق الحين؟! 📉", 
+            "يا عيال مين اللي كاتب السكربت هذا؟ الكورة فيزيائها سريعة تفلت! 🏎️", "تباً خذت سكن الـ RGB وصرت عاهة باللعب 😂",
+            "سكوري جالس يطير، لا أحد يكلمني جالس أركز 🔥", "أقول لا يكثر أنت وياه السيرفر حقي وقريب بجلدكم كلكم 😎"
+        ],
+        paddleHit: [
+            "أوووووف وش ذا الفلكس الأسطوري!! 🤯🎯", "يمين بالله صدة حظ، لو تعيدها مليون مرة ما تجي هههه 😂",
+            "كفووووو يا ملك، فزعة الصد الزاوي اشتغلت صح ⚡", "وربي لقطة خرافية تستاهل كليب شير! 🎬",
+            "لاااا الكومبو حقه جالس يولع يا عيال، أحد يوقفه! 🔥"
+        ],
+        ballDropped: [
+            "هههههههههههههههههههه طاحت! يبوي اعتزل وربي مالك بالصد 🤣💀", "مسكين ضاع التحدي النظيف، رح صيح في الزاوية هههههه 😂",
+            "أوووف لقطة الإعادة السينمائية الحين بتفضح فلكساتك البطيئة 🎬🍿", "المحرك غدر فيك؟ معليش هذي فيزياء الكبار يا حبيبي 😉",
+            "راحت القلوب يالنووب هههههههههه باي باي 👋❤️"
+        ],
+        userInsult: [
+            "أقول بلا كلام زايد ورنا مهاراتك بالملعب لا تنقش بالشات هههه 🤫", "يتكلم وهو سكور حقه ما وصل 200 هههههههه وربي نكتة 🤣",
+            "كفوك الطيب يا بطل، بس ترا عيني على مركزك الأول وبجلدك الحين 😉⚔️", "وش تبغى أنت؟ روح فعل أكواد سرية تدعمك يالنوب ههههههه 🔑"
+        ]
+    };
 
-    function createBall(x, y, vx, vy) {
-        return { x: x, y: y, r: 13, vx: vx, vy: vy, trail: [] };
-    }
-
-    function spawnObstacles() {
-        obstacles = [
-            { x: W / 4, y: H / 3, w: 90, h: 20, vx: 2 },
-            { x: (W / 4) * 2.5, y: H / 2.2, w: 90, h: 20, vx: -2 }
-        ];
-    }
-
-    function updateShopLocksUI() {
-        document.querySelectorAll('.cosmetic-btn[data-cost]').forEach(btn => {
-            let cost = parseInt(btn.getAttribute('data-cost'));
-            if (score >= cost) { btn.classList.remove('locked'); } 
-            else { btn.classList.add('locked'); }
-        });
-    }
-
-    function showAlert(text) {
-        alertBanner.textContent = text;
-        alertBanner.style.display = "block";
-        setTimeout(() => { alertBanner.style.display = "none"; }, 3000);
-    }
-
-    function triggerHitEffects(b) {
-        freezeTimer = 20; 
-        canvas.classList.add('shake-effect');
-        setTimeout(() => { canvas.classList.remove('shake-effect'); }, 120);
-        if(b.y > H - 65) {
-            shockwaves.push({ x: b.x, y: paddle.y, r: 10, maxR: 90, alpha: 1.0 });
-        }
-    }
-
-    function renderLeaderboard() {
-        let allPlayers = [...livePlayersData, { name: "أنت (البطل) 👑", score: score, isMe: true }];
-        allPlayers.sort((a, b) => b.score - a.score);
-
-        leaderboardBox.innerHTML = "";
-        allPlayers.forEach((p, index) => {
-            let row = document.createElement('div');
-            row.className = `user-row ${p.isMe ? 'active-user' : ''}`;
-            row.innerHTML = `<span>${index + 1}. ${p.name}</span><span>${p.score}</span>`;
-            leaderboardBox.appendChild(row);
-        });
-    }
-
-    function updateChallengesZoneLogic() {
-        const btnTime = document.getElementById('btn-claim-time');
-        const descTime = document.getElementById('desc-time');
-        if (!chTimeClaimed) {
-            let min = Math.floor(gameSecondsElapsed / 60).toString().padStart(2, '0');
-            let sec = (gameSecondsElapsed % 60).toString().padStart(2, '0');
-            descTime.textContent = `المطلوب: العب لمدة 15 دقيقة كاملة داخل القيم. (التقدم: ${min}:${sec} / 15:00)`;
-            if (gameSecondsElapsed >= 900) { btnTime.classList.add('ready'); btnTime.textContent = "استلام 150+ نقطة"; }
-        }
-
-        const btnLvl50 = document.getElementById('btn-claim-lvl50');
-        const descLvl50 = document.getElementById('desc-lvl50');
-        if (!chLvl50Claimed) {
-            descLvl50.textContent = `المطلوب: اختراق جدار السرعة والوصول للمرحلة 50. (المرحلة الحالية: ${level}/50)`;
-            if (level >= 50) { btnLvl50.classList.add('ready'); btnLvl50.textContent = "استلام 200+ نقطة"; }
-        }
-
-        const btnSurvival3 = document.getElementById('btn-claim-survival3');
-        const descSurvival3 = document.getElementById('desc-survival3');
-        if (!chSurvival3Claimed) {
-            let isReady = (gameMode === 'survival' && balls.length >= 3 && !hasLostLifeInSurvival);
-            descSurvival3.textContent = `المطلوب: طور البقاء + 3 كرات نشطة + قلوب كاملة. (الوضع الحالي: ${isReady ? 'مستحق وجاهز الحين! ✅' : 'الشروط لم تكتمل بعد ❌'})`;
-            if (isReady) { btnSurvival3.classList.add('ready'); btnSurvival3.textContent = "استلام 500+ نقطة"; }
-        }
-    }
-
-    setInterval(() => { if (running && !paused) { gameSecondsElapsed += 5; if (gameSecondsElapsed > 900) gameSecondsElapsed = 900; } }, 1000);
-
-    function triggerSystemChatNotification(challengeTitle, reward) {
-        let msgEl = document.createElement('div'); msgEl.className = 'chat-msg'; msgEl.style.borderLeftColor = '#ffae00';
-        msgEl.innerHTML = `<span class="chat-user" style="color:#ffae00;">نظام التحديات 🎯:</span> وااااو! كسر البطل الرقم القياسي وأنهى تحدي [${challengeTitle}] وقنص <span style="color:#ffc107; font-weight:bold;">${reward} نقطة</span> كاملة! 🔥🏆`;
-        liveChatBox.appendChild(msgEl); liveChatBox.scrollTop = liveChatBox.scrollHeight;
-    }
-
-    function triggerCyberMuteSystem() {
-        if (isMuted) return;
-        isMuted = true;
-        muteSecondsLeft = 60;
-        
-        muteOverlay.style.display = "flex";
-        muteTimerVal.textContent = muteSecondsLeft;
-        myChatInput.disabled = true;
-        sendChatBtn.disabled = true;
-
-        let sysMsg = document.createElement('div'); sysMsg.className = 'chat-msg';
-        sysMsg.style.borderLeft = '3px solid #ef4444'; sysMsg.style.background = 'rgba(239, 68, 68, 0.05)';
-        sysMsg.innerHTML = `<span class="chat-user" style="color:#ef4444;">SYSTEM DETECTED 🚨:</span> تم رصد سلوك هجومي/سب! تقييد شات هذا اللاعب ومنعه من الكلام لمدة 60 ثانية لتنظيف بيئة السيرفر! ⛔`;
-        liveChatBox.appendChild(sysMsg);
+    function addBotChatMessage(sender, text, borderHex) {
+        let msgEl = document.createElement('div');
+        msgEl.className = 'chat-msg';
+        msgEl.style.borderRight = `3px solid ${borderHex || '#a855f7'}`;
+        msgEl.innerHTML = `<span class="chat-user" style="color:${borderHex || '#eab308'};">${sender}:</span> ${text}`;
+        liveChatBox.appendChild(msgEl);
         liveChatBox.scrollTop = liveChatBox.scrollHeight;
-
-        setTimeout(() => { simulateBotReplyToToxic(); }, 1200);
-
-        muteTimerInterval = setInterval(() => {
-            muteSecondsLeft--;
-            muteTimerVal.textContent = muteSecondsLeft;
-            if (muteSecondsLeft <= 0) {
-                clearInterval(muteTimerInterval);
-                isMuted = false;
-                muteOverlay.style.display = "none";
-                myChatInput.disabled = false;
-                sendChatBtn.disabled = false;
-                
-                let sysUnmuteMsg = document.createElement('div'); sysUnmuteMsg.className = 'chat-msg';
-                sysUnmuteMsg.style.borderLeft = '3px solid #28a745';
-                sysUnmuteMsg.innerHTML = `<span class="chat-user" style="color:#28a745;">SYSTEM 🛡️:</span> انتهت فترة العقوبة، تم فك الحظر عنك. العب والتزم بقوانين الشات النظيف!`;
-                liveChatBox.appendChild(sysUnmuteMsg);
-                liveChatBox.scrollTop = liveChatBox.scrollHeight;
-            }
-        }, 1000);
+        if(liveChatBox.children.length > 30) liveChatBox.removeChild(liveChatBox.children[0]);
     }
 
-    function simulateBotReplyToToxic() {
-        let activeBots = [...chatUsers];
-        let replyCount = Math.floor(Math.random() * 2) + 1;
+    // 📈 محرك زيادة اللاعبين النشطين (بين 2 إلى 5 لاعبين لكل ثانية كاملة)
+    function updateOnlineCounterAndBotFlow() {
+        if (!running || paused) return;
+        
+        // زيادة اللاعبين بشكل عشوائي بين 2 و 5
+        let increment = Math.floor(Math.random() * 4) + 2; 
+        currentOnlineCount += increment;
+        onlineCountText.textContent = `${currentOnlineCount.toLocaleString()} لاعب`;
 
-        for (let k = 0; k < replyCount; k++) {
-            setTimeout(() => {
-                let randomBot = activeBots.splice(Math.floor(Math.random() * activeBots.length), 1)[0];
-                let randomReply = botToxicReplies[Math.floor(Math.random() * botToxicReplies.length)];
-                
-                let msgEl = document.createElement('div'); msgEl.className = 'chat-msg';
-                msgEl.style.borderLeftColor = '#ef4444';
-                msgEl.innerHTML = `<span class="chat-user" style="color:#ffc107;">${randomBot}:</span> ${randomReply}`;
-                liveChatBox.appendChild(msgEl);
-                liveChatBox.scrollTop = liveChatBox.scrollHeight;
-            }, k * 1000);
+        // محاكاة سكورات البوتات
+        livePlayersData.forEach(bot => {
+            if (Math.random() < 0.4) {
+                bot.score += Math.floor(Math.random() * 3) + 1;
+            }
+        });
+
+        // إطلاق سوالف قوية ومستمرة في الشات بناءً على حركة اللعب
+        if (Math.random() < 0.5) {
+            let bot = livePlayersData[Math.floor(Math.random() * livePlayersData.length)];
+            let pool = botReplies.scoreProgress;
+            let randomText = pool[Math.floor(Math.random() * pool.length)];
+            let rCfg = getRankConfig(bot.score);
+            addBotChatMessage(bot.name, randomText, rCfg.color);
         }
     }
+    setInterval(updateOnlineCounterAndBotFlow, 1000); // تحديث حركي مجنون كل ثانية!
 
-    function checkTextForToxic(text) {
-        let lowered = text.toLowerCase();
-        return toxicWords.some(word => lowered.includes(word));
-    }
+    // ⏱️ محرك تحديث وقت اللعب والتحديات الخلفية
+    function challengeTimerHeartbeat() {
+        if (!running || paused || isReplaying) return;
+        gameplaySeconds++;
 
-    function reset() {
-        // سرعة البداية المريحة للكرة الأولى (المرحلة 1)
-        balls = []; balls.push(createBall(W / 2, H / 2, 4.5, -4.5)); obstacles = [];
-        score = 0; level = 1; comboCount = 0; comboMultiplier = 1; gameSecondsElapsed = 0; hasLostLifeInSurvival = false;
-        chTimeClaimed = false; chLvl50Claimed = false; chSurvival3Claimed = false;
-
-        if (muteTimerInterval) clearInterval(muteTimerInterval);
-        isMuted = false; muteOverlay.style.display = "none"; myChatInput.disabled = false; sendChatBtn.disabled = false;
-
-        document.getElementById('card-time').className = "zone-card"; document.getElementById('card-lvl50').className = "zone-card"; document.getElementById('card-survival3').className = "zone-card";
-        document.getElementById('btn-claim-time').className = "claim-btn"; document.getElementById('btn-claim-time').textContent = "تحقق";
-        document.getElementById('btn-claim-lvl50').className = "claim-btn"; document.getElementById('btn-claim-lvl50').textContent = "تحقق";
-        document.getElementById('btn-claim-survival3').className = "claim-btn"; document.getElementById('btn-claim-survival3').textContent = "تحقق";
-
-        paddle.w = paddle.baseW; pointsDisplay.textContent = score; levelEl.textContent = level; renderLeaderboard();
-        comboDisplay.style.display = "none"; shockwaves = []; replayBuffer = []; ghostMode = false; rainbowMode = false; godMode = false;
-        freezeTimer = 0; canvas.classList.remove('shake-effect');
+        // حساب الدقائق والثواني لتحدي الـ 10 دقائق (600 ثانية)
+        let displayMins = Math.floor(gameplaySeconds / 60);
+        let displaySecs = gameplaySeconds % 60;
+        let strMins = displayMins < 10 ? "0" + displayMins : displayMins;
+        let strSecs = displaySecs < 10 ? "0" + displaySecs : displaySecs;
         
-        gameMode = gameModeSelect.value;
-        if (gameMode === 'survival') { lives = 3; livesDisplay.style.display = "block"; updateLivesUI(); } else { livesDisplay.style.display = "none"; }
-        onlineCountText.textContent = `${onlinePlayers.toLocaleString('en-US')} لاعب نشط`;
+        timeChallengeTicker.textContent = `الوقت المسجل الحين: ${strMins}:${strSecs} / 10:00`;
 
-        running = true; paused = false;
-        endScreen.style.display = "none"; shopScreen.style.display = "none"; settingsScreen.style.display = "none"; challengesZoneScreen.style.display = "none";
-        updateShopLocksUI();
-    }
-
-    function updateLivesUI() { livesDisplay.textContent = "❤️ ".repeat(lives); }
-    function endGame() { running = false; if (globalVolume > 0) loseSound.play().catch(() => {}); document.getElementById('finalScore').textContent = score; document.getElementById('finalLevel').textContent = level; endScreen.style.display = "flex"; startInstantReplayPlayBack(); }
-
-    let replayIntervalToken = null;
-    function startInstantReplayPlayBack() {
-        if (replayIntervalToken) clearInterval(replayIntervalToken);
-        if (replayBuffer.length === 0) return;
-        let frameIndex = 0;
-        replayIntervalToken = setInterval(() => {
-            if (frameIndex >= replayBuffer.length) frameIndex = 0;
-            renderSingleReplayFrame(replayBuffer[frameIndex]);
-            frameIndex++;
-        }, 35);
-    }
-
-    function renderSingleReplayFrame(frame) {
-        let scaleX = replayCanvas.width / W; let scaleY = replayCanvas.height / H;
-        replayCtx.fillStyle = frame.bgColor; replayCtx.fillRect(0, 0, replayCanvas.width, replayCanvas.height);
-        replayCtx.fillStyle = frame.paddleColor; replayCtx.fillRect(frame.paddleX * scaleX, frame.paddleY * scaleY, frame.paddleW * scaleX, 10);
-        for(let b of frame.balls) {
-            for (let t of b.trail) {
-                replayCtx.beginPath(); replayCtx.arc(t.x * scaleX, t.y * scaleY, 3, 0, Math.PI * 2);
-                replayCtx.fillStyle = frame.trailColor; replayCtx.globalAlpha = 0.2; replayCtx.fill(); replayCtx.globalAlpha = 1.0;
-            }
-            replayCtx.beginPath(); replayCtx.arc(b.x * scaleX, b.y * scaleY, 7, 0, Math.PI * 2); replayCtx.fillStyle = frame.ballColor; replayCtx.fill();
+        // 1. تفعيل تحدي الصمود 10 دقائق
+        if (gameplaySeconds >= 600 && !challenge1Completed) {
+            challenge1Completed = true;
+            score += 150;
+            pointsDisplay.textContent = score;
+            ch1Status.className = "challenge-status status-done";
+            ch1Status.textContent = "تم بنجاح! 🎉";
+            showAlert("🏆 إنجاز أسطوري! أكملت 10 دقائق وحصلت على +150 نقطة!");
+            addBotChatMessage("النظام 📡", "أشهد بالله أنك صامد كفو! تم منح اللاعب 150 نقطة مكافأة الصمود ⏱️🔥", "#22c55e");
         }
+
+        // 2. فحص تحدي الـ 1000 نقطة بدون سقوط الكورة
+        if (score >= 1000 && !ballDroppedThisGame && !challenge2Completed && gameMode === 'survival') {
+            challenge2Completed = true;
+            ch2Status.className = "challenge-status status-done";
+            ch2Status.textContent = "تم بنجاح! 🎉";
+            showAlert("👑 تحدي الألف النظيف! أنت رسمياً أسطورة السيرفر!");
+            addBotChatMessage("👑 Master_X", "وش ذاااا!! جاب 1000 نقطة بدون ما تطيح الكورة؟ وربي هكررر غش! 🤯❌", "#ec4899");
+        }
+
+        // 3. فحص تحدي الـ 500 نقطة بكامل القلوب الثلاثة دون أي خدش
+        if (score >= 500 && !lostHeartsThisGame && !challenge3Completed && gameMode === 'survival') {
+            challenge3Completed = true;
+            ch3Status.className = "challenge-status status-done";
+            ch3Status.textContent = "تم بنجاح! 🎉";
+            showAlert("🛡️ تحدي البقاء الحديدي! صمدت بـ 3 قلوب كاملة حتى 500 نقطة!");
+            addBotChatMessage("⚡ Toxic_Boy", "أوف صامد بـ 3 قلوب كاملة لـ 500 نقطة؟ يبوي فزعات الحظ شغالة معاه 😭❤️", "#00ffcc");
+        }
+
+        // تحديث حي لواجهة التحديات بشكل فوري في حالة فتحها
+        if (!challenge2Completed) ch2Status.textContent = `${score} / 1000`;
+        if (!challenge3Completed) ch3Status.textContent = `${score} / 500`;
+    }
+    setInterval(challengeTimerHeartbeat, 1000);
+
+    const paddle = { x: W / 2 - 77, y: H - 40, w: 155, baseW: 155, h: 16 };
+
+    function createBall(x, y, angleX) {
+        let speed = parseInt(gameSpeedSlider.value);
+        let angle = angleX || (Math.random() * 0.4 + 0.8) * Math.PI; 
+        return { 
+            x: x, y: y, r: parseInt(ballSizeSlider.value), 
+            vx: Math.cos(angle) * speed, vy: -Math.abs(Math.sin(angle) * speed)
+        };
     }
 
-    // ⚡ محرك ترقية المراحل والتحكم الدقيق بالسرعة القصوى
-    function checkLevel() {
-        let oldLevel = level; level = Math.floor(score / 5) + 1; levelEl.textContent = level;
-        
-        if (level > oldLevel) {
-            if (level === 2) { 
-                // المرحلة الثانية: كرتين، ونزيد سرعة الكرة الأساسية لسرعة أعلى
-                balls.push(createBall(W / 2, H / 3, -6, -5)); 
-                spawnObstacles(); 
-                paddle.w = paddle.baseW * 1.4; 
-                showAlert("⚠️ مرحلة 2: الكرات تتسارع وحجم المضرب توسع!"); 
-            } 
-            else if (level >= 3) { 
-                // 🚨 المرحلة الثالثة فما فوق: 3 كرات كاملة نشطة!
-                if (balls.length < 3) {
-                    while(balls.length < 3) {
-                        balls.push(createBall(W / 2, H / 4, 6, -6));
-                    }
-                }
-                paddle.w = paddle.baseW * 1.8; 
-                showAlert("💀 طور الـ Hardcore: 3 كرات بسرعة قصوى ثابتة 20!!"); 
-            }
-
-            // تطبيق قاعدة التسارع لكل مرحلة قبل الوصول لـ 3 كرات
-            balls.forEach((b, index) => {
-                if (level < 3) {
-                    // زيادة تدريجية طبيعية للسرعة في المراحل الأولى
-                    b.vx += 0.6 * Math.sign(b.vx); 
-                    b.vy += 0.6 * Math.sign(b.vy);
-                    
-                    // حد أقصى أمان للمرحلة 1 و 2 حتى لا تخرج عن السيطرة مبكراً
-                    let currentSpeed = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
-                    if (currentSpeed > 14) {
-                        let ratio = 14 / currentSpeed;
-                        b.vx *= ratio; b.vy *= ratio;
-                    }
-                }
+    function spawnParticles(x, y, color) {
+        for (let i = 0; i < 12; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 6 - 2,
+                radius: Math.random() * 4 + 1, color: color, alpha: 1.0, decay: Math.random() * 0.03 + 0.02
             });
         }
     }
 
-    function checkCheatCode(code) {
-        let cleanCode = code.trim().toUpperCase();
-        if (cleanCode === "AXS2026" || cleanCode === "LVL50") { level = 50; score = 250; levelEl.textContent = level; pointsDisplay.textContent = score; updateShopLocksUI(); renderLeaderboard(); checkLevel(); showAlert("🔓 قفز للمرحلة 50 وسرعة 20 قفلت!"); } 
-        else if (cleanCode === "GODMODE") { godMode = true; showAlert("🛡️ الخلود اللانهائي نشط الحين!"); }
-        else if (cleanCode === "RICH") { score = 9999; pointsDisplay.textContent = score; renderLeaderboard(); updateShopLocksUI(); showAlert("💰 شحن 9,999 نقطة!"); } 
-        else if (cleanCode === "TIMEFAST") { gameSecondsElapsed = 900; showAlert("⏳ تسريع الوقت لـ 15 دقيقة!"); }
-        cheatCodeInput.value = "";
+    function spawnRandomPowerUp() {
+        if (!running || paused || isReplaying) return;
+        let types = ['multiball', 'giant_paddle'];
+        let colors = { 'multiball': '#2ea846', 'giant_paddle': '#a855f7' };
+        let labels = { 'multiball': '🟢 مضاعفة الكرة', 'giant_paddle': '🟣 المضرب العملاق' };
+        let chosenType = types[Math.floor(Math.random() * types.length)];
+        
+        powerUps.push({
+            x: Math.random() * (W - 60) + 30, y: -20, w: 30, h: 30, vy: 2.2,
+            type: chosenType, color: colors[chosenType], label: labels[chosenType]
+        });
+    }
+    setInterval(spawnRandomPowerUp, 12000);
+
+    function updateShopLocksUI() {
+        document.querySelectorAll('.cosmetic-btn[data-cost]').forEach(btn => {
+            let cost = parseInt(btn.getAttribute('data-cost'));
+            if (score >= cost) btn.classList.remove('locked');
+            else btn.classList.add('locked');
+        });
+        shopCurrentPoints.textContent = score;
     }
 
-    function update() {
-        if (freezeTimer > 0) { freezeTimer -= 16.66; return; }
-        if (!lastCalledTime) { lastCalledTime = performance.now(); fps = 60; } 
-        else { let delta = (performance.now() - lastCalledTime) / 1000; lastCalledTime = performance.now(); fps = Math.round(1 / delta); }
+    function showAlert(text) {
+        alertBanner.textContent = text; alertBanner.style.display = "block";
+        setTimeout(() => { alertBanner.style.display = "none"; }, 3000);
+    }
+
+    function renderLeaderboardAndBotChat() {
+        let allPlayers = [...livePlayersData, { name: "أنت (ملك الصد) 👑", score: score, isMe: true }];
+        allPlayers.sort((a, b) => b.score - a.score);
+        leaderboardBox.innerHTML = "";
+        allPlayers.forEach((p, index) => {
+            let rCfg = getRankConfig(p.score);
+            let row = document.createElement('div');
+            row.className = `user-row ${p.isMe ? 'active-user' : ''}`;
+            row.innerHTML = `<span>${index + 1}. ${p.name} <span style="color:${rCfg.color}; font-size:9px;">[${rCfg.name.split(' ')[1] || 'ملك'}]</span></span><span>${p.score}</span>`;
+            leaderboardBox.appendChild(row);
+        });
+
+        let myCurrentRank = getRankConfig(score);
+        rankBadgeBig.textContent = myCurrentRank.name;
+        rankBadgeBig.style.color = myCurrentRank.color;
+    }
+
+    function manageLevelProgression() {
+        let pointsPerLevel = 15; 
+        let currentProgressPoints = score % pointsPerLevel;
+        let calculatedLevel = Math.floor(score / pointsPerLevel) + 1;
         
-        if (statsToggleSelect.value === "on") { fpsVal.textContent = fps + " إطار/ثانية"; speedVal.textContent = balls[0] ? Math.sqrt(balls[0].vx * balls[0].vx + balls[0].vy * balls[0].vy).toFixed(2) : "0"; }
-        if (rainbowMode && Math.random() < 0.05) { ballColorPicker.value = `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`; paddleColorPicker.value = `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`; }
+        let percentage = (currentProgressPoints / pointsPerLevel) * 100;
+        levelBarFill.style.width = `${percentage}%`;
 
-        obstacles.forEach(obs => { obs.x += obs.vx; if (obs.x < 50 || obs.x + obs.w > W - 50) obs.vx *= -1; });
+        if (calculatedLevel !== level) {
+            level = calculatedLevel;
+            currentLevelText.textContent = level;
+            showAlert(`⚡ صعدت لمرحلة سينمائية جديدة: Level ${level}`);
+            if (balls.length < 3) balls.push(createBall(W / 2, H / 2 - 40));
+        }
+    }
 
-        let frameBalls = balls.map(b => ({ x: b.x, y: b.y, trail: [...b.trail] }));
-        let currentFrameData = { balls: frameBalls, paddleX: paddle.x, paddleY: paddle.y, paddleW: paddle.w, ballColor: ballColorPicker.value, paddleColor: paddleColorPicker.value, trailColor: trailColorPicker.value, bgColor: bgColorPicker.value };
-        replayBuffer.push(currentFrameData); if (replayBuffer.length > MAX_REPLAY_FRAMES) replayBuffer.shift();
+    function updatePaddlePosition(clientX) {
+        if (!running || paused || isReplaying) return;
+        let rect = canvas.getBoundingClientRect();
+        let relativeX = (clientX - rect.left) * (W / rect.width);
+        let diff = relativeX - (paddle.x + paddle.w / 2);
+        paddle.x += diff * 0.88;
+        if (paddle.x < 0) paddle.x = 0; if (paddle.x + paddle.w > W) paddle.x = W - paddle.w;
+    }
 
-        for (let i = shockwaves.length - 1; i >= 0; i--) { shockwaves[i].r += 4; shockwaves[i].alpha -= 0.03; if (shockwaves[i].alpha <= 0) shockwaves.splice(i, 1); }
+    canvas.addEventListener('mousemove', function(e) { updatePaddlePosition(e.clientX); });
+    canvas.addEventListener('touchmove', function(e) { if (e.touches.length > 0) updatePaddlePosition(e.touches[0].clientX); }, { passive: true });
+
+    function handleUserChat() {
+        let txt = myChatInput.value.trim(); if(!txt) return;
+        let msgEl = document.createElement('div'); msgEl.className = 'chat-msg';
+        msgEl.style.borderRight = "3px solid #ffc107";
+        msgEl.innerHTML = `<span class="chat-user" style="color:#ffc107;">أنت:</span> ${txt}`;
+        liveChatBox.appendChild(msgEl); myChatInput.value = ""; liveChatBox.scrollTop = liveChatBox.scrollHeight;
+
+        // رد فوري ناري وقوي من البوتات على شات اللاعب!
+        setTimeout(() => {
+            let bot = livePlayersData[Math.floor(Math.random() * livePlayersData.length)];
+            let pool = botReplies.userInsult;
+            let answer = pool[Math.floor(Math.random() * pool.length)];
+            let rCfg = getRankConfig(bot.score);
+            addBotChatMessage(bot.name, answer, rCfg.color);
+        }, 800);
+    }
+    sendChatBtn.onclick = handleUserChat;
+    myChatInput.onkeydown = function(e) { if(e.key === 'Enter') handleUserChat(); };
+
+    // تفعيل الـ الأكواد السرية
+    redeemCodeBtn.onclick = function() {
+        let code = promoCodeInput.value.trim().toUpperCase();
+        if (!code) return;
+        if (usedCodes.includes(code)) { showAlert("⚠️ الكود مستخدم مسبقاً يا بطل!"); return; }
+
+        let correct = false; let message = "";
+
+        if(code === "BOOST2026") { score += 50; correct = true; message = "🔥 مبروك تم منحك +50 نقطة هدايا!"; }
+        else if(code === "DIAMOND") { score += 200; correct = true; message = "💎 كود الألماس الخرافي! +200 نقطة كاملة!"; }
+        else if(code === "RAINBOW_LASER") { activePaddleSkin = 'rgb_laser'; correct = true; message = "🌈 تم فتح وتفعيل سكن الـ RGB المتوهج فوراً!"; }
+
+        if (correct) {
+            usedCodes.push(code); pointsDisplay.textContent = score;
+            showAlert(message); promoCodeInput.value = "";
+            updateShopLocksUI(); manageLevelProgression();
+        } else { showAlert("❌ الكود خاطئ، تأكد من الحروف الكبيرة!"); }
+    };
+
+    /* ==========================================================================
+           6. محرك الحركة والتحديث والفيزياء المتطورة وموانع التعليق
+           ========================================================================== */
+    function update() {
+        if (!running || paused) return;
+
+        if (isReplaying) {
+            if (replayFrameIndex < replayBuffer.length) {
+                let frameData = replayBuffer[replayFrameIndex];
+                paddle.x = frameData.paddleX;
+                paddle.w = frameData.paddleW;
+                balls = frameData.balls.map(b => ({ x: b.x, y: b.y, r: b.r }));
+                powerUps = frameData.powerUps.map(p => ({ x: p.x, y: p.y, w: p.w, h: p.h, color: p.color }));
+                
+                balls.forEach(b => {
+                    ballTrails.push({ x: b.x, y: b.y, r: b.r * 0.9, alpha: 0.5, color: "#ff2222" });
+                });
+
+                replayFrameIndex++;
+            } else {
+                isReplaying = false;
+                replayOverlay.style.display = "none";
+                gameOverActual();
+            }
+            
+            for (let tIdx = ballTrails.length - 1; tIdx >= 0; tIdx--) {
+                ballTrails[tIdx].alpha -= 0.04;
+                if (ballTrails[tIdx].alpha <= 0) ballTrails.splice(tIdx, 1);
+            }
+            return; 
+        }
+
+        renderLeaderboardAndBotChat();
+
+        frameCount++;
+        let now = performance.now();
+        if (now >= lastLoopTime + 1000) {
+            fps = Math.round((frameCount * 1000) / (now - lastLoopTime));
+            fpsText.textContent = fps; frameCount = 0; lastLoopTime = now;
+        }
+
+        let currentFrameSnapshot = {
+            paddleX: paddle.x,
+            paddleW: paddle.w,
+            balls: balls.map(b => ({ x: b.x, y: b.y, r: b.r })),
+            powerUps: powerUps.map(p => ({ x: p.x, y: p.y, w: p.w, h: p.h, color: p.color }))
+        };
+        replayBuffer.push(currentFrameSnapshot);
+        if (replayBuffer.length > 130) replayBuffer.shift();
+
+        if (activePowerUp) {
+            powerUpTimer--;
+            activePowerUpDisplay.style.display = "inline-block";
+            activePowerUpDisplay.textContent = `⚡ القدرة: ${activePowerUp.toUpperCase()} (${Math.ceil(powerUpTimer/60)}ث)`;
+            if (powerUpTimer <= 0) { activePowerUp = null; activePowerUpDisplay.style.display = "none"; paddle.w = paddle.baseW; }
+        }
+
+        for (let k = powerUps.length - 1; k >= 0; k--) {
+            let box = powerUps[k]; box.y += box.vy;
+            if (box.x + box.w > paddle.x && box.x < paddle.x + paddle.w && box.y + box.h > paddle.y && box.y < paddle.y + paddle.h) {
+                activePowerUp = box.type; powerUpTimer = 480;
+                showAlert(`🎁 تفجير قدرة: ${box.label}!`);
+                if (box.type === 'multiball') balls.push(createBall(box.x, H / 2));
+                else if (box.type === 'giant_paddle') paddle.w = paddle.baseW * 2;
+                powerUps.splice(k, 1); continue;
+            }
+            if (box.y > H) powerUps.splice(k, 1);
+        }
+
+        for (let pIdx = particles.length - 1; pIdx >= 0; pIdx--) {
+            let pt = particles[pIdx]; pt.x += pt.vx; pt.y += pt.vy; pt.alpha -= pt.decay;
+            if (pt.alpha <= 0) particles.splice(pIdx, 1);
+        }
+
+        for (let tIdx = ballTrails.length - 1; tIdx >= 0; tIdx--) {
+            ballTrails[tIdx].alpha -= 0.04;
+            if (ballTrails[tIdx].alpha <= 0) ballTrails.splice(tIdx, 1);
+        }
+
+        let currentEngineSpeed = parseInt(gameSpeedSlider.value);
 
         for (let i = balls.length - 1; i >= 0; i--) {
-            let b = balls[i];
+            let b = balls[i]; if(!b) continue;
 
-            // ⚡ النظام الخارق: إذا كان عدد الكرات 3 (مرحلة 3+)، يتم قفل وتثبيت السرعة على 20 تماماً!
-            if (balls.length >= 3 || level >= 3) {
-                let magnitude = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
-                if (magnitude > 0) {
-                    // إجبار المتجه على اتخاذ سرعة 20 مطلقة في كل الإطارات
-                    b.vx = (b.vx / magnitude) * 20;
-                    b.vy = (b.vy / magnitude) * 20;
+            b.x += b.vx; b.y += b.vy;
+            ballTrails.push({ x: b.x, y: b.y, r: b.r * 0.9, alpha: 0.6, color: ballColorPicker.value });
+
+            // الجدران الجانبية
+            if (b.x - b.r < 0) { b.x = b.r; b.vx = Math.abs(b.vx); }
+            if (b.x + b.r > W) { b.x = W - b.r; b.vx = -Math.abs(b.vx); }
+            if (b.y - b.r < 0) { b.y = b.r; b.vy = Math.abs(b.vy); }
+
+            // Anti-Stuck Engine
+            if (Math.abs(b.vy) < 1.0 && running && !isReplaying) b.vy = 3.5; 
+            if (b.y < 30 && Math.abs(b.vx) > currentEngineSpeed * 0.95) b.vy = 4.0;
+
+            // نظام الصد الفيزيائي الحركي المتغير
+            if (b.x + b.r > paddle.x && b.x - b.r < paddle.x + paddle.w && b.y + b.r > paddle.y && b.y - b.r < paddle.y + paddle.h) {
+                let hitPositionNormalized = (b.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+                let maxAngleShift = 1.2; 
+                b.vx = hitPositionNormalized * currentEngineSpeed * maxAngleShift;
+                
+                let remainingSpeedSq = (currentEngineSpeed * currentEngineSpeed) - (b.vx * b.vx);
+                if (remainingSpeedSq < 9) remainingSpeedSq = 9; 
+                b.vy = -Math.sqrt(remainingSpeedSq);
+                
+                b.y = paddle.y - b.r; 
+                
+                comboCount++;
+                if (comboCount % 4 === 0) { comboMultiplier++; comboDisplay.textContent = `X${comboMultiplier} Combo 🔥`; comboDisplay.style.display = "block"; }
+                score += 1 * comboMultiplier; pointsDisplay.textContent = score;
+                
+                // شات تفاعلي فوري ومستمر من البوتات عند الصد الناجح!
+                if (Math.random() < 0.4) {
+                    let randomBot = livePlayersData[Math.floor(Math.random() * livePlayersData.length)];
+                    let pool = botReplies.paddleHit;
+                    let randomText = pool[Math.floor(Math.random() * pool.length)];
+                    let rCfg = getRankConfig(randomBot.score);
+                    addBotChatMessage(randomBot.name, randomText, rCfg.color);
                 }
+
+                spawnParticles(b.x, b.y, ballColorPicker.value);
+                manageLevelProgression();
             }
 
-            b.x += b.vx; b.y += b.vy; b.trail.push({ x: b.x, y: b.y }); if (b.trail.length > (activeTrailStyle === 'firetrail' ? 25 : 10)) b.trail.shift();
-            
-            if (b.x < b.r || b.x > W - b.r) { b.vx *= -1; triggerHitEffects(b); }
-            if (b.y < b.r) { b.vy *= -1; triggerHitEffects(b); }
-            obstacles.forEach(obs => { if (b.x + b.r >= obs.x && b.x - b.r <= obs.x + obs.w && b.y + b.r >= obs.y && b.y - b.r <= obs.y + obs.h) { b.vy *= -1; b.vx += (Math.random() - 0.5) * 2; triggerHitEffects(b); } });
-
-            if (godMode && b.y >= H - 25) { b.vy = -Math.abs(b.vy); b.y = H - 26; triggerHitEffects(b); if (globalVolume > 0) { hitSound.currentTime = 0; hitSound.play().catch(() => {}); } }
-
-            if (b.y > H) {
-                if (balls.length > 1) { balls.splice(i, 1); continue; } 
-                else {
-                    if (gameMode === 'survival' && lives > 1) { lives--; hasLostLifeInSurvival = true; updateLivesUI(); b.x = W / 2; b.y = H / 2; b.vx = 5; b.vy = -6; comboCount = 0; comboMultiplier = 1; comboDisplay.style.display = "none"; } 
-                    else { endGame(); return; }
-                }
-            }
-
-            if (b.y + b.r >= paddle.y && b.x >= paddle.x && b.x <= paddle.x + paddle.w) {
-                b.vy = -Math.abs(b.vy); b.y = paddle.y - b.r; comboCount++; comboMultiplier = comboCount >= 8 ? 4 : (comboCount >= 4 ? 2 : 1);
-                if (comboMultiplier > 1) { comboDisplay.textContent = `X${comboMultiplier} Ultra Combo! 🔥`; comboDisplay.style.display = "block"; }
-                score += 1 * comboMultiplier; pointsDisplay.textContent = score; 
-                if (globalVolume > 0) { hitSound.currentTime = 0; hitSound.play().catch(() => {}); }
-                triggerHitEffects(b); checkLevel(); updateShopLocksUI(); renderLeaderboard();
-            }
-        }
-
-        if (keys['ArrowLeft'] || keys['a']) paddle.x -= 10; if (keys['ArrowRight'] || keys['d']) paddle.x += 10; paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
-        updateChallengesZoneLogic();
-    }
-
-    function drawCrown(bx, by, radius, vx) { ctx.save(); ctx.translate(bx, by - radius - 5); ctx.rotate(vx * 0.03); ctx.shadowBlur = 20; ctx.shadowColor = '#ffd700'; ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.moveTo(-16, 2); ctx.lineTo(16, 2); ctx.lineTo(12, -12); ctx.lineTo(5, -4); ctx.lineTo(0, -18); ctx.lineTo(-5, -4); ctx.lineTo(-12, -12); ctx.closePath(); ctx.fill(); ctx.restore(); }
-
-    function draw() {
-        ctx.fillStyle = bgColorPicker.value; ctx.fillRect(0, 0, W, H);
-        let bgGrad = ctx.createRadialGradient(W/2, H/2, 50, W/2, H/2, W); bgGrad.addColorStop(0, 'rgba(0,0,0,0)'); bgGrad.addColorStop(1, 'rgba(0,0,0,0.7)'); ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
-        obstacles.forEach(obs => { ctx.save(); ctx.fillStyle = "#ff0055"; ctx.shadowBlur = 15; ctx.shadowColor = "#ff0055"; ctx.fillRect(obs.x, obs.y, obs.w, obs.h); ctx.fillStyle = "#ffffff"; ctx.fillRect(obs.x + 3, obs.y + 3, obs.w - 6, obs.h - 6); ctx.restore(); });
-        for (let wave of shockwaves) { ctx.save(); ctx.strokeStyle = paddleColorPicker.value; ctx.lineWidth = 3; ctx.globalAlpha = wave.alpha; ctx.beginPath(); ctx.arc(wave.x, wave.y, wave.r, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-        balls.forEach(b => {
-            for (let i = 0; i < b.trail.length; i++) { ctx.beginPath(); let trailRadius = b.r * (i / b.trail.length); ctx.arc(b.trail[i].x, b.trail[i].y, trailRadius, 0, Math.PI * 2); ctx.fillStyle = trailColorPicker.value; ctx.save(); ctx.globalAlpha = (i / b.trail.length) * 0.25; if(activeTrailStyle === 'firetrail') { ctx.shadowBlur = 15; ctx.shadowColor = '#ff4500'; } ctx.fill(); ctx.restore(); }
-            ctx.save(); if (ghostMode) { let visibility = Math.min(1, (b.y / (H - 100))); ctx.globalAlpha = visibility < 0.15 ? 0.15 : visibility; } ctx.shadowBlur = 25; ctx.shadowColor = ballColorPicker.value; let ballGrad = ctx.createRadialGradient(b.x - 3, b.y - 3, 2, b.x, b.y, b.r); ballGrad.addColorStop(0, '#ffffff'); ballGrad.addColorStop(1, ballColorPicker.value); ctx.fillStyle = ballGrad; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            if (activeAccessory === 'crown') { drawCrown(b.x, b.y, b.r, b.vx); }
-        });
-        if (godMode) { ctx.save(); ctx.strokeStyle = '#ff0055'; ctx.lineWidth = 4; ctx.shadowBlur = 15; ctx.shadowColor = '#ff0055'; ctx.beginPath(); ctx.moveTo(0, H - 10); ctx.lineTo(W, H - 10); ctx.stroke(); ctx.restore(); }
-        ctx.save(); ctx.shadowBlur = 20; ctx.shadowColor = paddleColorPicker.value; ctx.fillStyle = paddleColorPicker.value; ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h); ctx.fillStyle = '#ffffff'; ctx.fillRect(paddle.x + 5, paddle.y + 4, paddle.w - 10, paddle.h - 8); ctx.restore();
-    }
-
-    function loop() { if (running && !paused) { update(); draw(); } requestAnimationFrame(loop); }
-
-    function sendMyMessage() {
-        if (isMuted) return;
-        let text = myChatInput.value.trim();
-        if (text === "") return;
-
-        let msgEl = document.createElement('div'); msgEl.className = 'chat-msg';
-        msgEl.style.borderLeftColor = '#00ffcc'; 
-        msgEl.innerHTML = `<span class="chat-user" style="color:#00ffcc;">أنت (البطل) 👑:</span> ${text}`;
-        liveChatBox.appendChild(msgEl);
-
-        myChatInput.value = "";
-        liveChatBox.scrollTop = liveChatBox.scrollHeight;
-
-        if (checkTextForToxic(text)) { triggerCyberMuteSystem(); }
-    }
-
-    sendChatBtn.addEventListener('click', sendMyMessage);
-    myChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMyMessage(); });
-
-    document.getElementById('btn-claim-time').addEventListener('click', () => {
-        if (gameSecondsElapsed >= 900 && !chTimeClaimed) { chTimeClaimed = true; score += 150; pointsDisplay.textContent = score; renderLeaderboard(); updateShopLocksUI(); document.getElementById('card-time').classList.add('claimed'); document.getElementById('btn-claim-time').className = "claim-btn"; document.getElementById('btn-claim-time').textContent = "تم استلام 150+ ✓"; document.getElementById('btn-claim-time').classList.remove('ready'); triggerSystemChatNotification("الصمود الزمني (15 دقيقة)", 150); showAlert("💰 تم شحن +150 نقطة!"); }
-    });
-    document.getElementById('btn-claim-lvl50').addEventListener('click', () => {
-        if (level >= 50 && !chLvl50Claimed) { chLvl50Claimed = true; score += 200; pointsDisplay.textContent = score; renderLeaderboard(); updateShopLocksUI(); document.getElementById('card-lvl50').classList.add('claimed'); document.getElementById('btn-claim-lvl50').className = "claim-btn"; document.getElementById('btn-claim-lvl50').textContent = "تم استلام 200+ ✓"; document.getElementById('btn-claim-lvl50').classList.remove('ready'); triggerSystemChatNotification("ممتلك القوة المطلقة (Level 50)", 200); showAlert("💰 تم شحن +200 نقطة!"); }
-    });
-    document.getElementById('btn-claim-survival3').addEventListener('click', () => {
-        let isReady = (gameMode === 'survival' && balls.length >= 3 && !hasLostLifeInSurvival);
-        if (isReady && !chSurvival3Claimed) { chSurvival3Claimed = true; score += 500; pointsDisplay.textContent = score; renderLeaderboard(); updateShopLocksUI(); document.getElementById('card-survival3').classList.add('claimed'); document.getElementById('btn-claim-survival3').className = "claim-btn"; document.getElementById('btn-claim-survival3').textContent = "تم استلام 500+ ✓"; document.getElementById('btn-claim-survival3').classList.remove('ready'); triggerSystemChatNotification("تحدي البقاء المستحيل (3 كرات وبدون موت)", 500); showAlert("💰 تم كسب +500 نقطة!"); }
-    });
-
-    setInterval(() => {
-        if (!paused && running) {
-            let randomUser = chatUsers[Math.floor(Math.random() * chatUsers.length)];
-            let chatText = "";
-
-            let isBotToxic = Math.random() < 0.15;
-            if (isBotToxic) {
-                let randomToxicWord = toxicWords[Math.floor(Math.random() * toxicWords.length)];
-                chatText = `وربي قيم ${randomToxicWord} خرب علي السكور!!`;
-            } else {
-                chatText = chatPhrases[Math.floor(Math.random() * chatPhrases.length)];
-            }
-
-            let msgEl = document.createElement('div'); msgEl.className = 'chat-msg';
-            if(isBotToxic) { msgEl.style.borderLeftColor = '#f59e0b'; }
-            msgEl.innerHTML = `<span class="chat-user">${randomUser}:</span> ${chatText}`;
-            liveChatBox.appendChild(msgEl);
-            
-            if (liveChatBox.childNodes.length > 14) liveChatBox.removeChild(liveChatBox.firstChild);
-            liveChatBox.scrollTop = liveChatBox.scrollHeight;
-
-            if (isBotToxic) {
-                setTimeout(() => {
-                    let helperBot = chatUsers[Math.floor(Math.random() * chatUsers.length)];
-                    while(helperBot === randomUser) { helperBot = chatUsers[Math.floor(Math.random() * chatUsers.length)]; }
-                    let botReply = botToxicReplies[Math.floor(Math.random() * botToxicReplies.length)];
+            // سقوط الكرة بالأسفل
+            if (b.y - b.r > H) {
+                ballDroppedThisGame = true; // كسر تحدي الـ 1000 نقطة النظيف فوراً
+                
+                if (gameMode === 'classic') {
+                    b.x = Math.random() * (W - 40) + 20; b.y = 30; 
+                    let angle = (Math.random() * 0.4 + 0.8) * Math.PI;
+                    b.vx = Math.cos(angle) * currentEngineSpeed; b.vy = Math.abs(Math.sin(angle) * currentEngineSpeed); 
+                    score = Math.max(0, score - 2); pointsDisplay.textContent = score;
+                    showAlert("💥 تسلل! خصم -2!");
+                    manageLevelProgression();
+                } else {
+                    lives--; 
+                    lostHeartsThisGame = true; // كسر تحدي الـ 500 نقطة بكامل القلوب فوراً
+                    updateLivesUI();
                     
-                    let replyEl = document.createElement('div'); replyEl.className = 'chat-msg';
-                    replyEl.style.borderLeftColor = '#ef4444';
-                    replyEl.innerHTML = `<span class="chat-user">${helperBot}:</span> @${randomUser} ${botReply}`;
-                    liveChatBox.appendChild(replyEl);
-                    liveChatBox.scrollTop = liveChatBox.scrollHeight;
-                }, 1000);
+                    // شات طقطقة قوي جداً عند السقوط!
+                    let randomBot = livePlayersData[Math.floor(Math.random() * livePlayersData.length)];
+                    let pool = botReplies.ballDropped;
+                    let randomText = pool[Math.floor(Math.random() * pool.length)];
+                    let rCfg = getRankConfig(randomBot.score);
+                    addBotChatMessage(randomBot.name, randomText, rCfg.color);
+
+                    if (lives <= 0) {
+                        startInstantReplayMode(); 
+                    } else {
+                        b.x = Math.random() * (W - 40) + 20; b.y = 30; 
+                        let angle = (Math.random() * 0.4 + 0.8) * Math.PI;
+                        b.vx = Math.cos(angle) * currentEngineSpeed; b.vy = Math.abs(Math.sin(angle) * currentEngineSpeed); 
+                        showAlert("❤️ خسرت قلب! ركز بالصد!");
+                    }
+                }
             }
         }
-    }, 4500);
+    }
 
-    setInterval(() => { if (!paused && running) { livePlayersData.forEach(p => { if (Math.random() < 0.4) p.score += Math.floor(Math.random() * 5) + 2; }); renderLeaderboard(); } }, 2000);
+    /* ==========================================================================
+           7. محرك الرسم السينمائي المتوهج للكانفاس بدقة 4K
+           ========================================================================== */
+    function draw() {
+        ctx.fillStyle = isReplaying ? "rgba(18, 4, 4, 0.25)" : "rgba(4, 5, 11, 0.4)";
+        ctx.fillRect(0, 0, W, H);
 
-    document.getElementById('item-matrix-ai').addEventListener('click', () => {
-        let target = document.getElementById('item-matrix-ai'); if (target.classList.contains('locked')) return;
-        ballColorPicker.value = `hsl(${Math.floor(Math.random()*360)}, 100%, 50%)`; paddleColorPicker.value = `hsl(${Math.floor(Math.random()*360)}, 100%, 50%)`; trailColorPicker.value = ballColorPicker.value;
-        alert(`🎰 تم توليد ستايل مصفوفة عشوائي فريد!`);
-    });
+        powerUps.forEach(box => {
+            ctx.fillStyle = box.color; ctx.shadowColor = box.color; ctx.shadowBlur = 15;
+            ctx.beginPath(); ctx.roundRect(box.x, box.y, box.w, box.h, 6); ctx.fill();
+        });
+        ctx.shadowBlur = 0; 
+
+        ballTrails.forEach(t => {
+            ctx.fillStyle = t.color; ctx.globalAlpha = t.alpha;
+            ctx.beginPath(); ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
+
+        particles.forEach(pt => {
+            ctx.fillStyle = pt.color; ctx.globalAlpha = pt.alpha;
+            ctx.beginPath(); ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalAlpha = 1.0;
+
+        ctx.shadowBlur = 25;
+        let pColor = paddleColorPicker.value; ctx.shadowColor = pColor; ctx.fillStyle = pColor;
+
+        if (activePaddleSkin === 'classic_neon') {
+            ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8); ctx.fill();
+        } else if (activePaddleSkin === 'rgb_laser') {
+            let rgbColor = `hsl(${Date.now() / 6 % 360}, 100%, 50%)`;
+            ctx.shadowColor = rgbColor; ctx.fillStyle = rgbColor;
+            ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8); ctx.fill();
+        } else if (activePaddleSkin === 'royal_crown') {
+            ctx.shadowColor = "#ffcd00"; ctx.fillStyle = "#ffcd00";
+            ctx.beginPath(); ctx.roundRect(paddle.x, paddle.y, paddle.w, paddle.h, 8); ctx.fill();
+            ctx.fillStyle = "#ffffff"; ctx.font = "20px Tahoma"; ctx.textAlign = "center";
+            ctx.fillText("👑", paddle.x + paddle.w / 2, paddle.y - 4);
+        }
+        ctx.shadowBlur = 0;
+
+        let currentBallColor = isReplaying ? "#ef4444" : ballColorPicker.value;
+        ctx.shadowBlur = 20; ctx.shadowColor = currentBallColor;
+        balls.forEach(b => {
+            ctx.fillStyle = currentBallColor; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+    }
+
+    function startInstantReplayMode() {
+        if (replayBuffer.length === 0) { gameOverActual(); return; }
+        isReplaying = true;
+        replayFrameIndex = 0;
+        replayOverlay.style.display = "flex"; 
+    }
+
+    function gameOverActual() {
+        running = false; 
+        endScreen.style.display = "flex"; 
+        document.getElementById('finalScore').textContent = score; 
+    }
+
+    function updateLivesUI() { livesDisplay.innerHTML = ""; for (let i = 0; i < lives; i++) livesDisplay.innerHTML += "❤️ "; }
+    function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+    // التحكم بالواجهات المنفصلة المستقلة
+    pauseGameBtn.onclick = function() { paused = true; pauseOverlay.style.display = "flex"; pauseGameBtn.style.display = "none"; resumeGameBtn.style.display = "inline-block"; };
+    resumeGameBtn.onclick = function() { paused = false; pauseOverlay.style.display = "none"; resumeGameBtn.style.display = "none"; pauseGameBtn.style.display = "inline-block"; };
+
+    document.getElementById('openSettingsBtn').onclick = function() { paused = true; settingsScreen.style.display = "flex"; pauseOverlay.style.display = "flex"; };
+    document.getElementById('closeSettingsBtn').onclick = function() { settingsScreen.style.display = "none"; if(resumeGameBtn.style.display === "none") { paused = false; pauseOverlay.style.display = "none"; } };
+    
+    document.getElementById('openChallengesBtn').onclick = function() { paused = true; challengesScreen.style.display = "flex"; pauseOverlay.style.display = "flex"; };
+    document.getElementById('closeChallengesBtn').onclick = function() { challengesScreen.style.display = "none"; if(resumeGameBtn.style.display === "none") { paused = false; pauseOverlay.style.display = "none"; } };
+
+    document.getElementById('openRanksBtn').onclick = function() { paused = true; ranksScreen.style.display = "flex"; pauseOverlay.style.display = "flex"; };
+    document.getElementById('closeRanksBtn').onclick = function() { ranksScreen.style.display = "none"; if(resumeGameBtn.style.display === "none") { paused = false; pauseOverlay.style.display = "none"; } };
+
+    document.getElementById('openCodesBtn').onclick = function() { paused = true; codesScreen.style.display = "flex"; pauseOverlay.style.display = "flex"; };
+    document.getElementById('closeCodesBtn').onclick = function() { codesScreen.style.display = "none"; if(resumeGameBtn.style.display === "none") { paused = false; pauseOverlay.style.display = "none"; } };
+
+    document.getElementById('openShopBtn').onclick = function() { paused = true; updateShopLocksUI(); shopScreen.style.display = "flex"; pauseOverlay.style.display = "flex"; };
+    document.getElementById('closeShopBtn').onclick = function() { shopScreen.style.display = "none"; if(resumeGameBtn.style.display === "none") { paused = false; pauseOverlay.style.display = "none"; } };
+    
+    document.getElementById('playAgainBtn').onclick = function() { reset(); };
+
+    gameModeSelect.onchange = function() {
+        gameMode = this.value;
+        if (gameMode === 'survival') { lives = 3; livesDisplay.style.display = "inline"; updateLivesUI(); } else { livesDisplay.style.display = "none"; }
+        reset();
+    };
 
     document.querySelectorAll('.cosmetic-btn[data-type]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            let target = e.target.closest('.cosmetic-btn'); if (target.classList.contains('locked')) return;
-            let type = target.getAttribute('data-type'); let id = target.getAttribute('data-id');
-            if (type === 'accessory') { document.querySelectorAll('.cosmetic-btn[data-type="accessory"]').forEach(b => b.classList.remove('active')); target.classList.add('active'); activeAccessory = id; } 
-            else if (type === 'trail') { document.querySelectorAll('.cosmetic-btn[data-type="trail"]').forEach(b => b.classList.remove('active')); target.classList.add('active'); activeTrailStyle = id; }
-        });
+        btn.onclick = function() {
+            if (this.classList.contains('locked')) { showAlert("⚠️ النقاط ما تكفي!"); return; }
+            let itemType = this.getAttribute('data-type'); let itemId = this.getAttribute('data-id');
+            if (itemType === 'paddleSkin') activePaddleSkin = itemId;
+            this.parentNode.querySelectorAll('.cosmetic-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            showAlert("✅ تم تفعيل المظهر بنجاح!");
+        };
     });
 
-    window.addEventListener('keydown', e => { if (document.activeElement !== myChatInput) keys[e.key] = true; });
-    window.addEventListener('keyup', e => { if (document.activeElement !== myChatInput) delete keys[e.key]; });
-    canvas.addEventListener('mousemove', e => { const rect = canvas.getBoundingClientRect(); paddle.x = e.clientX - rect.left - paddle.w / 2; });
+    function reset() {
+        balls = []; particles = []; ballTrails = []; powerUps = []; replayBuffer = [];
+        balls.push(createBall(W / 2, H / 2 - 40)); 
+        score = 0; level = 1; comboCount = 0; comboMultiplier = 1; activePowerUp = null; powerUpTimer = 0; paddle.w = paddle.baseW; paddle.x = W / 2 - paddle.w / 2;
+        isReplaying = false; replayOverlay.style.display = "none";
+        
+        // إعادة تهيئة تتبعات التحديات الفرعية للقيم الجديد
+        ballDroppedThisGame = false;
+        lostHeartsThisGame = false;
 
-    function handleTouch(e) { if (e.touches.length > 0) { const rect = canvas.getBoundingClientRect(); const relativeX = (e.touches[0].clientX - rect.left) * (W / rect.width); paddle.x = relativeX - paddle.w / 2; } }
-    canvas.addEventListener('touchstart', handleTouch, { passive: true }); canvas.addEventListener('touchmove', handleTouch, { passive: true });
+        if (gameMode === 'survival') { lives = 3; livesDisplay.style.display = "inline"; updateLivesUI(); }
+        pointsDisplay.textContent = score; comboDisplay.style.display = "none"; endScreen.style.display = "none"; activePowerUpDisplay.style.display = "none";
+        currentLevelText.textContent = level; levelBarFill.style.width = "0%";
+        running = true; paused = false; pauseOverlay.style.display = "none"; resumeGameBtn.style.display = "none"; pauseGameBtn.style.display = "inline-block";
+        
+        // إعادة تهيئة حالة التحديات البصرية
+        if(!challenge1Completed) ch1Status.textContent = "جاري الحساب..";
+        if(!challenge2Completed) ch2Status.textContent = "0 / 1000";
+        if(!challenge3Completed) ch3Status.textContent = "0 / 500";
 
-    document.getElementById('pauseBtn').addEventListener('click', () => { paused = !paused; });
-    document.getElementById('openChallengesBtn').addEventListener('click', () => { paused = true; challengesZoneScreen.style.display = "flex"; });
-    document.getElementById('closeChallengesBtn').addEventListener('click', () => { paused = false; challengesZoneScreen.style.display = "none"; });
-    document.getElementById('openShopBtn').addEventListener('click', () => { paused = true; shopCurrentPoints.textContent = score; shopScreen.style.display = "flex"; });
-    document.getElementById('closeShopBtn').addEventListener('click', () => { paused = false; shopScreen.style.display = "none"; });
-    document.getElementById('openSettingsBtn').addEventListener('click', () => { paused = true; settingsScreen.style.display = "flex"; });
-    document.getElementById('closeSettingsBtn').addEventListener('click', () => { paused = false; settingsScreen.style.display = "none"; if (statsToggleSelect.value === "on") perfStats.style.display = "block"; else perfStats.style.display = "none"; if (cheatCodeInput.value !== "") checkCheatCode(cheatCodeInput.value); });
-    document.getElementById('playAgainBtn').addEventListener('click', () => { if (replayIntervalToken) clearInterval(replayIntervalToken); reset(); });
-    triggerReplayBtn.addEventListener('click', () => { startInstantReplayPlayBack(); });
-    gameModeSelect.addEventListener('change', () => { reset(); });
-    volumeSlider.addEventListener('input', (e) => { globalVolume = e.target.value / 100; });
+        renderLeaderboardAndBotChat();
+    }
 
-    reset();
-    loop();
+    reset(); loop();
 </script>
 </body>
 </html>
